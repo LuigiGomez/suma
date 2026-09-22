@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="description" content="Juego de sumas hasta 10 para ninas de 6 anos: cada acierto construye una pieza y tienes 5 corazones.">
+<meta name="theme-color" content="#7A4DD6">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  html,body{height:100%}
+  body{margin:0;font-family:system-ui,sans-serif;background:#FDF3E3;color:#3E2B52;-webkit-text-size-adjust:100%}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+  :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+</style>
+<title>Suma y Construye</title>
+<style>
+  :root{
+    color-scheme: light;
+    --papel:#FDF3E3;
+    --nube:#FFFFFF;
+    --tinta:#3E2B52;
+    --tinta-suave:#7A6A88;
+    --rosa:#FF4F87;
+    --rosa-claro:#FFD9E5;
+    --turquesa:#12B5A5;
+    --turquesa-claro:#CFF2EE;
+    --sol:#FFC53D;
+    --morado:#7A4DD6;
+    --verde:#5FBF4A;
+    --cielo:#BFE9FF;
+    --sombra:0 6px 0 rgba(62,43,82,.18);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--papel);
+    color:var(--tinta);
+    font-family:'Nunito','Trebuchet MS',system-ui,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  h1,h2,h3,.cifra{font-family:'Baloo 2','Comic Sans MS','Trebuchet MS',cursive,sans-serif;font-weight:800;text-wrap:balance}
+  #app{
+    min-height:100%;
+    display:flex;flex-direction:column;align-items:center;
+    padding:0 16px;
+    padding-block:14px 22px;
+    gap:14px;
+  }
+  .marco{width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px}
+
+  /* ---------- botones ---------- */
+  .btn{
+    font-family:'Baloo 2','Trebuchet MS',cursive,sans-serif;
+    font-size:22px;font-weight:800;color:#fff;
+    background:var(--morado);
+    border:none;border-radius:20px;
+    padding:14px 26px;cursor:pointer;
+    box-shadow:0 6px 0 rgba(0,0,0,.18);
+    transition:transform .1s ease, box-shadow .1s ease;
+  }
+  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+  .btn:focus-visible{outline:4px solid var(--sol);outline-offset:3px}
+  .btn.rosa{background:var(--rosa)}
+  .btn.verde{background:var(--verde)}
+
+  /* ---------- pantalla inicio ---------- */
+  .titulo{
+    text-align:center;font-size:40px;font-size:clamp(34px,10vw,48px);line-height:1;margin:6px 0 0;
+    color:var(--morado);
+    text-shadow:3px 3px 0 var(--sol);
+  }
+  .subtitulo{text-align:center;margin:0;font-size:17px;color:var(--tinta-suave);font-weight:700}
+  .elige{text-align:center;font-size:22px;margin:4px 0 0}
+  .mundos{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between}
+  .mundo{
+    width:calc(50% - 6px);
+    background:var(--nube);border:4px solid var(--tinta);border-radius:24px;
+    padding:10px 8px 12px;cursor:pointer;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    box-shadow:var(--sombra);
+    transition:transform .12s ease;
+    font-family:'Baloo 2','Trebuchet MS',cursive,sans-serif;font-size:17px;font-weight:800;color:var(--tinta);
+  }
+  .mundo:hover{transform:translateY(-3px) rotate(-1deg)}
+  .mundo:active{transform:translateY(2px)}
+  .mundo:focus-visible{outline:4px solid var(--rosa);outline-offset:3px}
+  .mundo svg{width:100%;height:auto;display:block;border-radius:14px;background:var(--cielo)}
+  .nota{
+    background:var(--turquesa-claro);border-radius:18px;padding:12px 16px;
+    font-size:15px;line-height:1.45;color:#0d6a60;font-weight:700;text-align:center;
+  }
+
+  /* ---------- barra superior del juego ---------- */
+  .barra{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .vidas{display:flex;gap:4px;align-items:center}
+  .vidas svg{width:30px;height:30px;transition:transform .3s ease, opacity .3s ease}
+  .vidas svg.ida{opacity:.22;transform:scale(.7)}
+  .piezas-txt{font-family:'Baloo 2',cursive,sans-serif;font-size:18px;font-weight:800;color:var(--morado)}
+  .progreso{display:flex;gap:4px;width:100%}
+  .bloque{flex:1;height:12px;border-radius:6px;background:#E7DCC9}
+  .bloque.on{background:var(--sol);box-shadow:0 0 0 2px #fff inset}
+
+  /* ---------- escena ---------- */
+  .escena{
+    position:relative;width:100%;border:4px solid var(--tinta);border-radius:26px;overflow:hidden;
+    background:linear-gradient(#DFF3FF,#BFE9FF);box-shadow:var(--sombra);
+  }
+  .escena svg{display:block;width:100%;height:auto}
+  .pz{opacity:0;transform:scale(.4);transform-box:fill-box;transform-origin:center;transition:opacity .25s ease}
+  .pz.on{opacity:1;transform:scale(1);animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+  @keyframes pop{0%{transform:scale(.3) rotate(-8deg)}60%{transform:scale(1.12) rotate(3deg)}100%{transform:scale(1)}}
+  .globo{
+    position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) scale(.6);
+    background:var(--sol);color:var(--tinta);border:4px solid var(--tinta);
+    font-family:'Baloo 2',cursive,sans-serif;font-size:26px;font-weight:800;
+    padding:8px 20px;border-radius:999px;opacity:0;pointer-events:none;
+  }
+  .globo.ver{animation:globo 1.1s ease forwards}
+  .globo.mal{background:var(--rosa-claro)}
+  @keyframes globo{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}25%{opacity:1;transform:translate(-50%,-70%) scale(1.1)}70%{opacity:1;transform:translate(-50%,-80%) scale(1)}100%{opacity:0;transform:translate(-50%,-110%) scale(.95)}}
+
+  /* ---------- pregunta ---------- */
+  .tarjeta{
+    background:var(--nube);border:4px solid var(--tinta);border-radius:26px;
+    padding:14px;box-shadow:var(--sombra);display:flex;flex-direction:column;gap:12px;
+  }
+  .suma{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+  .grupo{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:72px}
+  .puntos{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:90px;margin:0 auto}
+  .punto{width:14px;height:14px;border-radius:50%;background:var(--rosa);border:2px solid rgba(0,0,0,.12)}
+  .grupo.b .punto{background:var(--turquesa)}
+  .cifra{font-size:44px;line-height:1}
+  .signo{font-size:34px;color:var(--tinta-suave);font-family:'Baloo 2',cursive,sans-serif;font-weight:800}
+  .opciones{display:flex;gap:10px}
+  .op{
+    font-family:'Baloo 2',cursive,sans-serif;font-size:36px;font-weight:800;color:var(--tinta);
+    background:var(--sol);border:4px solid var(--tinta);border-radius:22px;
+    padding:14px 0;cursor:pointer;min-height:72px;flex:1 1 0;width:32%;
+    box-shadow:0 6px 0 rgba(62,43,82,.28);transition:transform .1s ease,box-shadow .1s ease;
+  }
+  .op:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(62,43,82,.28)}
+  .op:focus-visible{outline:4px solid var(--morado);outline-offset:3px}
+  .op.bien{background:var(--verde);color:#fff;animation:pop .45s}
+  .op.mal{background:var(--rosa);color:#fff;animation:tiembla .4s}
+  .op[disabled]{cursor:default}
+  @keyframes tiembla{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+  .pie{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:-4px}
+  .mini{
+    font-family:'Nunito',sans-serif;font-weight:900;font-size:14px;color:var(--tinta-suave);
+    background:#F0E7D6;border:none;border-radius:999px;padding:9px 14px;cursor:pointer;
+  }
+  .mini:focus-visible{outline:3px solid var(--morado);outline-offset:2px}
+  .mensaje{font-weight:900;font-size:17px;color:var(--morado);min-height:24px;text-align:center}
+
+  /* ---------- final ---------- */
+  .final{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+  .estrellas{font-size:40px;letter-spacing:6px;color:var(--sol)}
+  .final h2{font-size:34px;margin:0;color:var(--morado)}
+  .final p{margin:0;font-size:17px;font-weight:700;color:var(--tinta-suave)}
+  #confeti{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50}
+  @supports not (row-gap: 1px){
+    .marco>*+*{margin-top:14px}
+    .mundos .mundo{margin-bottom:12px}
+    .opciones .op+.op{margin-left:10px}
+    .puntos .punto{margin:2px}
+    .progreso .bloque+.bloque{margin-left:4px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001s !important;transition-duration:.001s !important}
+  }
+  @media (max-width:380px){
+    .cifra{font-size:36px}
+    .op{font-size:30px;min-height:64px}
+  }
+</style>
+
+
+</head>
+<body>
+<canvas id="confeti" hidden></canvas>
+
+<div id="app">
+  <!-- ============ INICIO ============ -->
+  <section class="marco" id="pantallaInicio">
+    <h1 class="titulo">Suma y Construye</h1>
+    <p class="subtitulo">Cada suma correcta pone una pieza. ¡Tienes 5 corazones!</p>
+    <p class="elige">¿Qué quieres construir hoy?</p>
+    <div class="mundos" id="mundos"></div>
+    <p class="nota">Sumas hasta el 10 · 10 piezas para terminar · los puntitos de colores te ayudan a contar</p>
+  </section>
+
+  <!-- ============ JUEGO ============ -->
+  <section class="marco" id="pantallaJuego" hidden>
+    <div class="barra">
+      <div class="vidas" id="vidas" aria-label="Corazones"></div>
+      <div class="piezas-txt" id="piezasTxt">Piezas 0 / 10</div>
+    </div>
+    <div class="progreso" id="progreso"></div>
+
+    <div class="escena">
+      <div id="lienzo"></div>
+      <div class="globo" id="globo"></div>
+    </div>
+
+    <div class="tarjeta">
+      <div class="suma">
+        <div class="grupo a">
+          <div class="puntos" id="puntosA"></div>
+          <div class="cifra" id="numA">3</div>
+        </div>
+        <div class="signo">+</div>
+        <div class="grupo b">
+          <div class="puntos" id="puntosB"></div>
+          <div class="cifra" id="numB">4</div>
+        </div>
+        <div class="signo">=</div>
+        <div class="cifra" id="incognita" style="color:var(--morado)">?</div>
+      </div>
+      <div class="opciones" id="opciones"></div>
+      <div class="mensaje" id="mensaje">Toca el número correcto</div>
+      <div class="pie">
+        <button class="mini" id="btnVoz" type="button">🔊 Escuchar</button>
+        <button class="mini" id="btnSalir" type="button">Cambiar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FINAL ============ -->
+  <section class="marco final" id="pantallaFinal" hidden>
+    <div class="estrellas" id="estrellas">★★★</div>
+    <h2 id="finalTitulo">¡Lo lograste!</h2>
+    <p id="finalTexto">Construiste tu castillo.</p>
+    <div class="escena"><div id="lienzoFinal"></div></div>
+    <button class="btn verde" id="btnOtraVez" type="button">Jugar otra vez</button>
+    <button class="btn rosa" id="btnOtroMundo" type="button">Construir otra cosa</button>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= ESCENAS (10 piezas cada una) ================= */
+  const P = (i, contenido) => '<g class="pz" data-i="' + i + '">' + contenido + '</g>';
+  const VB = '<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ESC">';
+
+  const escenas = {
+    castillo: {
+      nombre: "Castillo mágico",
+      cosa: "tu castillo",
+      piezas: [
+        P(1,'<path d="M0 248 Q100 236 200 244 T400 246 L400 300 L0 300Z" fill="#6FC85A"/><path d="M0 262 Q120 252 260 262 T400 258" fill="none" stroke="#57AF45" stroke-width="5" stroke-linecap="round"/>'),
+        P(2,'<rect x="150" y="150" width="100" height="98" rx="4" fill="#FFE2B0" stroke="#C98F4F" stroke-width="4"/><path d="M150 184h100M150 214h100M178 150v34M212 184v30" stroke="#EBC791" stroke-width="3"/>'),
+        P(3,'<rect x="92" y="118" width="58" height="130" rx="5" fill="#FFEED2" stroke="#C98F4F" stroke-width="4"/>'),
+        P(4,'<rect x="250" y="118" width="58" height="130" rx="5" fill="#FFEED2" stroke="#C98F4F" stroke-width="4"/>'),
+        P(5,'<g fill="#FFE2B0" stroke="#C98F4F" stroke-width="4"><rect x="150" y="136" width="22" height="18"/><rect x="189" y="136" width="22" height="18"/><rect x="228" y="136" width="22" height="18"/></g>'),
+        P(6,'<path d="M178 248v-38a22 22 0 0 1 44 0v38z" fill="#B97042" stroke="#8A4F2B" stroke-width="4"/><circle cx="212" cy="224" r="4" fill="#FFC53D"/>'),
+        P(7,'<g fill="#7FD3F5" stroke="#C98F4F" stroke-width="4"><path d="M108 178v-14a13 13 0 0 1 26 0v14z"/><path d="M266 178v-14a13 13 0 0 1 26 0v14z"/></g>'),
+        P(8,'<polygon points="121,74 96,120 146,120" fill="#FF4F87" stroke="#D32E65" stroke-width="4"/><polygon points="279,74 254,120 304,120" fill="#FF4F87" stroke="#D32E65" stroke-width="4"/>'),
+        P(9,'<path d="M200 136V98" stroke="#8A4F2B" stroke-width="5" stroke-linecap="round"/><path d="M200 100h36l-9 12 9 12h-36z" fill="#12B5A5" stroke="#0A8C80" stroke-width="3"/>'),
+        P(10,'<circle cx="52" cy="54" r="26" fill="#FFC53D"/><g stroke="#FFC53D" stroke-width="5" stroke-linecap="round"><path d="M52 14v-10M52 104v10M12 54H2M102 54h10M24 26l-7-7M80 82l7 7M80 26l7-7M24 82l-7 7"/></g><g fill="#fff"><ellipse cx="320" cy="60" rx="34" ry="18"/><ellipse cx="300" cy="52" rx="20" ry="14"/></g>')
+      ]
+    },
+    casa: {
+      nombre: "Casa del árbol",
+      cosa: "tu casa del árbol",
+      piezas: [
+        P(1,'<path d="M0 250 Q110 238 220 248 T400 248 L400 300 L0 300Z" fill="#6FC85A"/><path d="M30 268l10-14 10 14M340 272l10-14 10 14" stroke="#57AF45" stroke-width="4" fill="none" stroke-linecap="round"/>'),
+        P(2,'<path d="M182 250c-4-60 0-110 6-150h24c6 40 10 90 6 150z" fill="#A9703F" stroke="#7E4F27" stroke-width="4"/>'),
+        P(3,'<g fill="#63C24E" stroke="#3F9A34" stroke-width="4"><circle cx="140" cy="86" r="48"/><circle cx="260" cy="86" r="48"/><circle cx="200" cy="58" r="52"/></g>'),
+        P(4,'<rect x="118" y="176" width="164" height="16" rx="6" fill="#C98F4F" stroke="#8A5A2B" stroke-width="4"/>'),
+        P(5,'<rect x="140" y="118" width="120" height="58" fill="#FFE2B0" stroke="#8A5A2B" stroke-width="4"/><path d="M140 140h120M140 158h120" stroke="#EBC791" stroke-width="3"/>'),
+        P(6,'<polygon points="200,80 128,124 272,124" fill="#FF4F87" stroke="#D32E65" stroke-width="4"/>'),
+        P(7,'<circle cx="238" cy="145" r="15" fill="#7FD3F5" stroke="#8A5A2B" stroke-width="4"/><path d="M223 145h30M238 130v30" stroke="#8A5A2B" stroke-width="3"/>'),
+        P(8,'<rect x="158" y="132" width="34" height="44" rx="4" fill="#B97042" stroke="#7E4F27" stroke-width="4"/><circle cx="185" cy="156" r="3.5" fill="#FFC53D"/>'),
+        P(9,'<g stroke="#D9B27A" stroke-width="4" fill="none"><path d="M150 192v56M182 192v56"/><path d="M150 206h32M150 222h32M150 238h32"/></g>'),
+        P(10,'<g stroke="#7A4DD6" stroke-width="3" fill="none"><path d="M118 184q41 22 82 0"/></g><g><polygon points="132,190 144,190 138,202" fill="#FFC53D"/><polygon points="156,196 168,196 162,208" fill="#12B5A5"/><polygon points="180,198 192,198 186,210" fill="#FF4F87"/></g><g><ellipse cx="308" cy="150" rx="15" ry="11" fill="#FF8AB0"/><circle cx="320" cy="144" r="8" fill="#FF8AB0"/><circle cx="323" cy="142" r="2" fill="#3E2B52"/><polygon points="328,144 338,147 328,150" fill="#FFC53D"/></g>')
+      ]
+    },
+    jardin: {
+      nombre: "Jardín del unicornio",
+      cosa: "tu jardín con unicornio",
+      piezas: [
+        P(1,'<path d="M0 244 Q100 232 200 242 T400 240 L400 300 L0 300Z" fill="#7BD267"/><path d="M40 262l8-12 8 12M300 268l8-12 8 12" stroke="#4FAE3F" stroke-width="4" fill="none" stroke-linecap="round"/>'),
+        P(2,'<g><path d="M70 250v-36" stroke="#4FAE3F" stroke-width="5"/><g fill="#FF4F87"><circle cx="70" cy="200" r="10"/><circle cx="56" cy="212" r="10"/><circle cx="84" cy="212" r="10"/><circle cx="62" cy="226" r="10"/><circle cx="78" cy="226" r="10"/></g><circle cx="70" cy="213" r="7" fill="#FFC53D"/></g>'),
+        P(3,'<g><path d="M330 250v-30" stroke="#4FAE3F" stroke-width="5"/><g fill="#FFC53D"><circle cx="330" cy="206" r="10"/><circle cx="316" cy="218" r="10"/><circle cx="344" cy="218" r="10"/><circle cx="322" cy="232" r="10"/><circle cx="338" cy="232" r="10"/></g><circle cx="330" cy="219" r="7" fill="#fff"/></g>'),
+        P(4,'<g fill="#5CB94B"><ellipse cx="128" cy="246" rx="30" ry="18"/><ellipse cx="108" cy="250" rx="20" ry="13"/></g><circle cx="120" cy="240" r="5" fill="#FF8AB0"/><circle cx="138" cy="246" r="5" fill="#fff"/>'),
+        P(5,'<g fill="none" stroke-width="12" stroke-linecap="round"><path d="M40 190a130 130 0 0 1 260 0" stroke="#FF4F87" opacity=".9"/><path d="M58 190a112 112 0 0 1 224 0" stroke="#FFC53D"/><path d="M76 190a94 94 0 0 1 188 0" stroke="#5FBF4A"/><path d="M94 190a76 76 0 0 1 152 0" stroke="#7A4DD6"/></g>'),
+        P(6,'<g fill="#fff"><ellipse cx="52" cy="196" rx="30" ry="17"/><ellipse cx="288" cy="196" rx="30" ry="17"/><ellipse cx="302" cy="188" rx="18" ry="12"/></g>'),
+        P(7,'<g><g transform="translate(150,86)"><path d="M0 0 C-16-18 -30-6 -4 8 Z" fill="#FF8AB0"/><path d="M4 0 C20-18 34-6 8 8 Z" fill="#FF8AB0"/><path d="M2 -6v18" stroke="#7A4DD6" stroke-width="3"/></g><g transform="translate(262,120)"><path d="M0 0 C-12-14 -23-5 -3 6 Z" fill="#12B5A5"/><path d="M3 0 C15-14 26-5 6 6 Z" fill="#12B5A5"/><path d="M1 -5v14" stroke="#7A4DD6" stroke-width="3"/></g></g>'),
+        P(8,'<g fill="#FFFFFF" stroke="#E2D6F2" stroke-width="3"><ellipse cx="208" cy="212" rx="52" ry="32"/><rect x="170" y="232" width="13" height="30" rx="6"/><rect x="196" y="238" width="13" height="26" rx="6"/><rect x="224" y="238" width="13" height="26" rx="6"/><rect x="248" y="232" width="13" height="30" rx="6"/></g>'),
+        P(9,'<g><path d="M244 200c10-14 16-32 22-44l20 8c-4 16-8 34-16 44z" fill="#fff" stroke="#E2D6F2" stroke-width="3"/><ellipse cx="290" cy="152" rx="26" ry="19" fill="#fff" stroke="#E2D6F2" stroke-width="3"/><circle cx="300" cy="148" r="3.5" fill="#3E2B52"/><polygon points="292,133 300,106 306,136" fill="#FFC53D" stroke="#E0A81F" stroke-width="2"/><ellipse cx="312" cy="160" rx="5" ry="4" fill="#FFD9E5"/></g>'),
+        P(10,'<g><path d="M272 140c-14-10-30-4-34 10 12-6 20-4 26 2 8 8 4 18-4 24 18 2 28-24 12-36z" fill="#FF8AB0"/><path d="M286 128c-8-12 2-24 16-22-8 6-8 12-4 18z" fill="#7A4DD6"/><path d="M158 196c-18 6-24 26-14 44 4-14 12-22 22-24z" fill="#FF8AB0"/></g><g fill="#FFC53D"><polygon points="60,60 65,74 79,74 68,83 72,97 60,88 48,97 52,83 41,74 55,74"/><polygon points="344,86 348,96 358,96 350,102 353,112 344,106 335,112 338,102 330,96 340,96"/></g>')
+      ]
+    },
+    cohete: {
+      nombre: "Cohete espacial",
+      cosa: "tu cohete",
+      piezas: [
+        P(1,'<rect x="0" y="0" width="400" height="300" fill="#2B2150"/><path d="M0 256 Q90 232 190 252 T400 244 L400 300 L0 300Z" fill="#8E7BC4"/><g fill="#7A69AF"><ellipse cx="96" cy="272" rx="24" ry="9"/><ellipse cx="300" cy="278" rx="30" ry="10"/></g>'),
+        P(2,'<path d="M172 108h56v118h-56z" fill="#F4F1FA" stroke="#B9AFD4" stroke-width="4"/>'),
+        P(3,'<path d="M200 36c18 22 28 48 28 72h-56c0-24 10-50 28-72z" fill="#FF4F87" stroke="#D32E65" stroke-width="4"/>'),
+        P(4,'<path d="M172 168l-34 62h34z" fill="#FF4F87" stroke="#D32E65" stroke-width="4"/><path d="M228 168l34 62h-34z" fill="#FF4F87" stroke="#D32E65" stroke-width="4"/>'),
+        P(5,'<circle cx="200" cy="140" r="22" fill="#7FD3F5" stroke="#3E2B52" stroke-width="5"/><path d="M190 132a12 12 0 0 1 10-6" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>'),
+        P(6,'<g fill="#12B5A5"><rect x="172" y="182" width="56" height="12"/><rect x="172" y="204" width="56" height="8"/></g><rect x="166" y="226" width="68" height="14" rx="5" fill="#C9C1E0" stroke="#B9AFD4" stroke-width="3"/>'),
+        P(7,'<g><path d="M186 240c4 20 10 32 14 40 4-8 10-20 14-40z" fill="#FFC53D"/><path d="M192 240c3 14 6 22 8 28 2-6 5-14 8-28z" fill="#FF4F87"/></g>'),
+        P(8,'<g fill="#FFF3C4"><circle cx="46" cy="54" r="4"/><circle cx="92" cy="106" r="3"/><circle cx="330" cy="46" r="4"/><circle cx="366" cy="120" r="3"/><circle cx="286" cy="86" r="3"/><circle cx="60" cy="168" r="3"/></g><g fill="#FFC53D"><polygon points="118,44 123,58 137,58 126,67 130,81 118,72 106,81 110,67 99,58 113,58"/></g>'),
+        P(9,'<circle cx="326" cy="170" r="40" fill="#FFD98A" stroke="#E0A81F" stroke-width="4"/><g fill="#EFC169"><circle cx="314" cy="160" r="8"/><circle cx="338" cy="180" r="6"/><circle cx="330" cy="152" r="4"/></g><ellipse cx="326" cy="170" rx="56" ry="12" fill="none" stroke="#C9C1E0" stroke-width="5" transform="rotate(-18 326 170)"/>'),
+        P(10,'<g transform="translate(70,180)"><circle cx="0" cy="0" r="22" fill="#F4F1FA" stroke="#B9AFD4" stroke-width="4"/><path d="M-12-4a12 12 0 0 1 20-8" stroke="#7FD3F5" stroke-width="7" fill="none" stroke-linecap="round"/><rect x="-16" y="20" width="32" height="30" rx="12" fill="#F4F1FA" stroke="#B9AFD4" stroke-width="4"/><path d="M16 26l22-14" stroke="#F4F1FA" stroke-width="10" stroke-linecap="round"/><circle cx="42" cy="10" r="8" fill="#FF4F87"/><path d="M-16 44l-16 16M16 44l14 18" stroke="#F4F1FA" stroke-width="10" stroke-linecap="round"/></g>')
+      ]
+    }
+  };
+  const ordenMundos = ["castillo","casa","jardin","cohete"];
+
+  const svgDe = (clave, completo) => {
+    const e = escenas[clave];
+    let s = VB.replace("ESC", e.nombre);
+    if (clave !== "cohete") s += '<rect width="400" height="300" fill="none"/>';
+    s += e.piezas.join("");
+    s += '</svg>';
+    if (completo) s = s.replace(/class="pz"/g, 'class="pz on"');
+    return s;
+  };
+
+  /* ================= ESTADO ================= */
+  const T = 10;           // piezas para terminar
+  const VIDAS = 5;        // oportunidades
+  let mundo = "castillo", piezas = 0, vidas = VIDAS, a = 1, b = 1, bloqueado = false, ultima = "";
+  let sonido = true;
+
+  const $ = (id) => document.getElementById(id);
+  const pantallas = { inicio: $("pantallaInicio"), juego: $("pantallaJuego"), final: $("pantallaFinal") };
+  const mostrar = (cual) => { for (const k in pantallas) pantallas[k].hidden = (k !== cual); window.scrollTo(0,0); };
+
+  /* ================= SONIDO ================= */
+  let ctx = null;
+  function tono(frecs, dur){
+    if (!sonido) return;
+    try{
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === "suspended") ctx.resume();
+      frecs.forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = "sine"; o.frequency.value = f;
+        const t0 = ctx.currentTime + i * dur;
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.25, t0 + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        o.connect(g); g.connect(ctx.destination); o.start(t0); o.stop(t0 + dur + 0.05);
+      });
+    }catch(e){}
+  }
+  const sBien = () => tono([523,659,784], 0.14);
+  const sMal  = () => tono([330,247], 0.2);
+  const sGana = () => tono([523,659,784,1047,1319], 0.16);
+
+  function decir(texto){
+    if (!sonido || !("speechSynthesis" in window)) return;
+    try{
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(texto);
+      u.lang = "es-ES"; u.rate = 0.85; u.pitch = 1.25;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  /* ================= INICIO ================= */
+  const cajaMundos = $("mundos");
+  ordenMundos.forEach((clave) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "mundo";
+    b.innerHTML = svgDe(clave, true) + '<span>' + escenas[clave].nombre + '</span>';
+    b.addEventListener("click", () => empezar(clave));
+    cajaMundos.appendChild(b);
+  });
+
+  /* ================= JUEGO ================= */
+  function pintarVidas(){
+    const c = $("vidas");
+    let h = "";
+    for (let i = 0; i < VIDAS; i++){
+      h += '<svg viewBox="0 0 24 24" class="' + (i >= vidas ? "ida" : "") + '">' +
+           '<path d="M12 21s-8-5.2-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.8-8 11-8 11z" fill="#FF4F87" stroke="#D32E65" stroke-width="1.6"/></svg>';
+    }
+    c.innerHTML = h;
+  }
+  function pintarProgreso(){
+    const c = $("progreso"); c.innerHTML = "";
+    for (let i = 0; i < T; i++){
+      const d = document.createElement("div");
+      d.className = "bloque" + (i < piezas ? " on" : "");
+      c.appendChild(d);
+    }
+    $("piezasTxt").textContent = "Piezas " + piezas + " / " + T;
+  }
+  function puntos(caja, n){
+    caja.innerHTML = "";
+    for (let i = 0; i < n; i++){
+      const d = document.createElement("div"); d.className = "punto"; caja.appendChild(d);
+    }
+  }
+  function mezclar(arr){
+    for (let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+  function nuevaSuma(){
+    let x, y, clave;
+    do {
+      x = 1 + Math.floor(Math.random() * 8);
+      y = 1 + Math.floor(Math.random() * (10 - x));
+      clave = x + "+" + y;
+    } while (clave === ultima);
+    ultima = clave; a = x; b = y;
+
+    $("numA").textContent = a;
+    $("numB").textContent = b;
+    $("incognita").textContent = "?";
+    puntos($("puntosA"), a);
+    puntos($("puntosB"), b);
+
+    const correcto = a + b;
+    const ops = [correcto];
+    while (ops.length < 3){
+      const d = correcto + (Math.random() < 0.5 ? -1 : 1) * (1 + Math.floor(Math.random() * 3));
+      if (d >= 2 && d <= 12 && ops.indexOf(d) === -1) ops.push(d);
+    }
+    mezclar(ops);
+    const caja = $("opciones"); caja.innerHTML = "";
+    ops.forEach((v) => {
+      const bt = document.createElement("button");
+      bt.type = "button"; bt.className = "op"; bt.textContent = v;
+      bt.addEventListener("click", () => responder(bt, v, correcto));
+      caja.appendChild(bt);
+    });
+    bloqueado = false;
+    $("mensaje").textContent = "Toca el número correcto";
+    decir(a + " más " + b);
+  }
+  function globo(texto, mal){
+    const g = $("globo");
+    g.textContent = texto;
+    g.className = "globo ver" + (mal ? " mal" : "");
+    setTimeout(() => { g.className = "globo"; }, 1200);
+  }
+  const animos = ["¡Muy bien!","¡Excelente!","¡Genial!","¡Súper!","¡Qué lista!","¡Eso es!"];
+
+  function responder(boton, valor, correcto){
+    if (bloqueado) return;
+    bloqueado = true;
+    const botones = $("opciones").children;
+    for (let i = 0; i < botones.length; i++) botones[i].disabled = true;
+    $("incognita").textContent = correcto;
+
+    if (valor === correcto){
+      boton.classList.add("bien");
+      piezas++;
+      const pieza = document.querySelector('#lienzo .pz[data-i="' + piezas + '"]');
+      if (pieza) pieza.classList.add("on");
+      pintarProgreso();
+      sBien();
+      const frase = animos[Math.floor(Math.random() * animos.length)];
+      globo(frase, false);
+      $("mensaje").textContent = frase + " Pusiste una pieza.";
+      decir(frase);
+      setTimeout(() => { piezas >= T ? terminar(true) : nuevaSuma(); }, 1250);
+    } else {
+      boton.classList.add("mal");
+      for (let i = 0; i < botones.length; i++){
+        if (Number(botones[i].textContent) === correcto) botones[i].classList.add("bien");
+      }
+      vidas--;
+      pintarVidas();
+      sMal();
+      globo("Era " + correcto, true);
+      $("mensaje").textContent = "Casi… " + a + " + " + b + " son " + correcto + ".";
+      decir(a + " más " + b + " son " + correcto);
+      setTimeout(() => { vidas <= 0 ? terminar(false) : nuevaSuma(); }, 1900);
+    }
+  }
+
+  function empezar(clave){
+    mundo = clave; piezas = 0; vidas = VIDAS; ultima = "";
+    $("lienzo").innerHTML = svgDe(clave, false);
+    pintarVidas(); pintarProgreso();
+    mostrar("juego");
+    nuevaSuma();
+  }
+
+  function terminar(gano){
+    mostrar("final");
+    $("lienzoFinal").innerHTML = $("lienzo").innerHTML;
+    const e = escenas[mundo];
+    if (gano){
+      const n = vidas >= 5 ? 3 : (vidas >= 3 ? 2 : 1);
+      $("estrellas").textContent = ["☆☆☆","★☆☆","★★☆","★★★"][n];
+      $("finalTitulo").textContent = "¡Lo lograste!";
+      $("finalTexto").textContent = "Terminaste " + e.cosa + " con " + vidas + (vidas === 1 ? " corazón" : " corazones") + " de sobra.";
+      sGana(); decir("¡Lo lograste! Terminaste " + e.cosa);
+      confetiVa();
+    } else {
+      $("estrellas").textContent = "☆☆☆";
+      $("finalTitulo").textContent = "¡Casi casi!";
+      $("finalTexto").textContent = "Pusiste " + piezas + " de " + T + " piezas. Vuelve a intentarlo, ya te falta poquito.";
+      decir("Casi casi. Inténtalo otra vez");
+    }
+  }
+
+  $("btnOtraVez").addEventListener("click", () => empezar(mundo));
+  $("btnOtroMundo").addEventListener("click", () => mostrar("inicio"));
+  $("btnSalir").addEventListener("click", () => mostrar("inicio"));
+  $("btnVoz").addEventListener("click", () => {
+    sonido = !sonido;
+    $("btnVoz").textContent = sonido ? "🔊 Escuchar" : "🔇 Sin sonido";
+    if (sonido) decir(a + " más " + b);
+    else if ("speechSynthesis" in window) { try { speechSynthesis.cancel(); } catch(e){} }
+  });
+
+  /* ================= CONFETI ================= */
+  function confetiVa(){
+    const cv = $("confeti"); cv.hidden = false;
+    const g = cv.getContext("2d");
+    const R = () => { cv.width = innerWidth; cv.height = innerHeight; };
+    R(); addEventListener("resize", R);
+    const colores = ["#FF4F87","#FFC53D","#12B5A5","#7A4DD6","#5FBF4A","#7FD3F5"];
+    const ps = [];
+    for (let i = 0; i < 120; i++){
+      ps.push({ x: Math.random()*cv.width, y: -20 - Math.random()*cv.height,
+        w: 8 + Math.random()*8, h: 10 + Math.random()*10,
+        vy: 1.6 + Math.random()*2.6, vx: -1 + Math.random()*2,
+        r: Math.random()*Math.PI, vr: -0.1 + Math.random()*0.2,
+        c: colores[Math.floor(Math.random()*colores.length)] });
+    }
+    let t = 0;
+    (function loop(){
+      t++;
+      g.clearRect(0,0,cv.width,cv.height);
+      ps.forEach((p) => {
+        p.y += p.vy; p.x += p.vx; p.r += p.vr;
+        if (p.y > cv.height + 20){ p.y = -20; p.x = Math.random()*cv.width; }
+        g.save(); g.translate(p.x,p.y); g.rotate(p.r);
+        g.fillStyle = p.c; g.fillRect(-p.w/2,-p.h/2,p.w,p.h); g.restore();
+      });
+      if (t < 380) requestAnimationFrame(loop);
+      else { g.clearRect(0,0,cv.width,cv.height); cv.hidden = true; }
+    })();
+  }
+
+  /* ================= arranque ================= */
+  pintarVidas(); pintarProgreso(); mostrar("inicio");
+  try{
+    if (window.claude && window.claude.hot && window.claude.hot.snapshot){
+      window.claude.hot.snapshot(() => ({ mundo: mundo, piezas: piezas, vidas: vidas }));
+    }
+  }catch(e){}
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
+
+</body>
+</html>

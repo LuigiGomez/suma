@@ -61,8 +61,8 @@
     color:#0C6A61;font-weight:700;text-align:center}
 
   /* selector de modo */
-  .modos{display:flex;gap:8px;flex-wrap:wrap}
-  .modo{flex:1 1 0;min-width:102px;background:var(--nube);border:4px solid #DCE5F2;border-radius:22px;
+  .modos{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .modo{flex:1 1 0;min-width:102px;max-width:172px;background:var(--nube);border:4px solid #DCE5F2;border-radius:22px;
     padding:12px 6px;cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;
     font-family:'Baloo 2',cursive,sans-serif;font-size:16px;font-weight:800;color:var(--tinta-suave)}
   .modo.activo{border-color:var(--morado);color:var(--morado);background:#F2EEFF;box-shadow:var(--sombra)}
@@ -73,6 +73,32 @@
   .modo .icono i:nth-child(2){background:var(--turquesa)}
   .modo .icono i:nth-child(3){background:var(--sol)}
   .modo .icono b{font-family:'Baloo 2',cursive,sans-serif;font-size:19px;color:var(--morado)}
+
+  /* modo patrones */
+  .serie{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center}
+  .ficha{width:52px;height:52px;border-radius:16px;background:var(--arena);border:4px solid var(--arena-borde);
+    display:flex;align-items:center;justify-content:center;animation:entra .3s ease both}
+  .ficha svg{width:72%;height:72%;display:block}
+  .ficha.hueco{border-style:dashed;background:#F2EEFF;font-family:'Baloo 2',cursive,sans-serif;
+    font-size:28px;font-weight:800;color:var(--morado)}
+  .ficha.hueco.puesta{border-style:solid;background:#EAF9EA;border-color:var(--verde)}
+  .op.figura{display:flex;align-items:center;justify-content:center;min-height:78px}
+  .op.figura svg{width:46px;height:46px;display:block}
+
+  /* modo mayor o menor */
+  .duelo{display:flex;gap:12px;justify-content:center}
+  .lado{flex:1 1 0;background:var(--arena);border:4px solid var(--arena-borde);border-radius:22px;
+    padding:12px 8px;cursor:pointer;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;
+    align-content:center;min-height:124px;transition:transform .1s}
+  .lado:active{transform:scale(.97)}
+  .lado:focus-visible{outline:4px solid var(--morado);outline-offset:3px}
+  .lado.gana{border-color:var(--verde);background:#EAF9EA;animation:pop .5s}
+  .lado.pierde{opacity:.5}
+  .lado .bolita{width:26px;height:26px}
+
+  /* modo restar */
+  .grande.vuela{animation:vuela .65s ease forwards}
+  @keyframes vuela{to{transform:translate(46px,-76px) scale(.25) rotate(28deg);opacity:0}}
 
   /* modo memoria */
   .tablero{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
@@ -223,6 +249,26 @@
         Memoria
         <small>Parejas, sin corazones</small>
       </button>
+      <button class="modo" type="button" data-modo="patrones">
+        <span class="icono"><i></i><b>?</b></span>
+        ¿Qué sigue?
+        <small>Completa la serie</small>
+      </button>
+      <button class="modo" type="button" data-modo="amigos">
+        <span class="icono"><b>+ = 10</b></span>
+        Amigos del 10
+        <small>¿Cuántas faltan?</small>
+      </button>
+      <button class="modo" type="button" data-modo="comparar">
+        <span class="icono"><b>5 &gt; 3</b></span>
+        Mayor o menor
+        <small>¿Cuál tiene más?</small>
+      </button>
+      <button class="modo" type="button" data-modo="restar">
+        <span class="icono"><b>8 − 3</b></span>
+        Quitar bolitas
+        <small>¿Cuántas quedan?</small>
+      </button>
     </div>
     <p class="elige">¿Y qué quieres construir?</p>
     <div class="mundos" id="mundos"></div>
@@ -277,14 +323,37 @@
         <div class="contador" id="contador">Toca cada bolita</div>
       </div>
 
-      <!-- Paso 3: elegir el número -->
-      <div id="paso3" hidden>
-        <div class="opciones" id="opciones"></div>
-      </div>
-
       <!-- Modo memoria -->
       <div id="memoria" hidden>
         <div class="tablero" id="tablero"></div>
+      </div>
+
+      <!-- Modo patrones -->
+      <div id="patrones" hidden>
+        <div class="serie" id="serie"></div>
+      </div>
+
+      <!-- Modo amigos del diez -->
+      <div id="amigos" hidden>
+        <div class="marco10" id="marcoAmigos"></div>
+        <div class="contador" id="pistaAmigos"></div>
+      </div>
+
+      <!-- Modo mayor o menor -->
+      <div id="comparar" hidden>
+        <div class="duelo" id="duelo"></div>
+      </div>
+
+      <!-- Modo quitar bolitas -->
+      <div id="restar" hidden>
+        <div class="marco10" id="marcoRestar"></div>
+        <div class="contador" id="contRestar"></div>
+        <div style="text-align:center"><button class="btn rosa" id="btnQuitar" type="button">¡Que vuelen!</button></div>
+      </div>
+
+      <!-- Botones de respuesta, compartidos por varios juegos -->
+      <div id="paso3" hidden>
+        <div class="opciones" id="opciones"></div>
       </div>
 
       <div class="mensaje" id="mensaje">Mira los dos grupos de bolitas</div>
@@ -611,6 +680,10 @@
 
   function paso(n){
     $("memoria").hidden = (modo !== "memoria");
+    $("patrones").hidden = (modo !== "patrones");
+    $("amigos").hidden = (modo !== "amigos");
+    $("comparar").hidden = (modo !== "comparar");
+    $("restar").hidden = (modo !== "restar");
     $("sumaNum").hidden = (modo !== "numeros");
     $("paso1").hidden = (modo !== "bolitas" || n !== 1);
     $("paso2").hidden = (modo !== "bolitas" || n < 2);
@@ -627,6 +700,10 @@
   }
 
   function nuevaRonda(){
+    if (modo === "patrones") return rondaPatrones();
+    if (modo === "amigos") return rondaAmigos();
+    if (modo === "comparar") return rondaComparar();
+    if (modo === "restar") return rondaRestar();
     let x, y, clave;
     do {
       x = 1 + Math.floor(Math.random() * 5);
@@ -723,10 +800,54 @@
 
   function preguntar(){
     const correcto = a + b;
+    textosRonda = {
+      bien: "Pusiste una pieza.",
+      mal: modo === "bolitas"
+        ? "Contaste " + correcto + " bolitas. Este es el " + correcto + "."
+        : "Casi… " + a + " + " + b + " son " + correcto + ".",
+      voz: modo === "bolitas" ? "Este es el " + NOMBRES[correcto] : a + " más " + b + " son " + correcto,
+      globo: "Son " + correcto
+    };
+    ponerOpciones(correcto, 1, 10, modo === "bolitas");
+    if (modo === "bolitas"){
+      $("mensaje").textContent = "¿Cuál número es?";
+      decirYa("¿Cuál número es?");
+    }
+  }
+
+  const animos = ["¡Muy bien!","¡Excelente!","¡Genial!","¡Súper!","¡Qué lista!","¡Eso es!"];
+  let textosRonda = {bien: "Pusiste una pieza.", mal: "¡Casi!", voz: "", globo: "¡Casi!"};
+
+  /* Estas dos deciden qué pasa al acertar o al fallar, para todos los juegos. */
+  function acierto(extra){
+    piezas++;
+    const pieza = document.querySelector('#lienzo .pz[data-i="' + piezas + '"]');
+    if (pieza) pieza.classList.add("on");
+    pintarProgreso();
+    sBien();
+    const frase = animos[Math.floor(Math.random() * animos.length)];
+    globo(frase, false);
+    $("mensaje").textContent = frase + " " + (extra || "Pusiste una pieza.");
+    decirYa(frase);
+    setTimeout(() => { piezas >= T ? terminar(true) : nuevaRonda(); }, 1400);
+  }
+
+  function fallo(texto, voz, corto, espera){
+    vidas--;
+    pintarVidas();
+    sMal();
+    globo(corto || "¡Casi!", true);
+    $("mensaje").textContent = texto;
+    if (voz) decirYa(voz);
+    setTimeout(() => { vidas <= 0 ? terminar(false) : nuevaRonda(); }, espera || 2100);
+  }
+
+  /* Botones de números, compartidos por varios juegos */
+  function ponerOpciones(correcto, minimo, maximo, conBolitas){
     const ops = [correcto];
     while (ops.length < 3){
       const d = correcto + (Math.random() < 0.5 ? -1 : 1) * (1 + Math.floor(Math.random() * 2));
-      if (d >= 1 && d <= 10 && ops.indexOf(d) === -1) ops.push(d);
+      if (d >= minimo && d <= maximo && ops.indexOf(d) === -1) ops.push(d);
     }
     for (let i = ops.length - 1; i > 0; i--){
       const j = Math.floor(Math.random() * (i + 1));
@@ -737,28 +858,21 @@
     ops.forEach((v) => {
       const bt = document.createElement("button");
       bt.type = "button"; bt.className = "op";
-      if (modo === "bolitas"){
+      if (conBolitas){
         let mini = '<span class="mini-fila">';
         for (let i = 0; i < v; i++) mini += '<i></i>';
-        mini += '</span>';
-        bt.innerHTML = v + mini;
+        bt.innerHTML = v + mini + '</span>';
       } else {
         bt.textContent = v;
       }
-      bt.addEventListener("click", () => responder(bt, v, correcto));
+      bt.addEventListener("click", () => elegirNumero(bt, v, correcto));
       caja.appendChild(bt);
     });
     bloqueado = false;
     paso(3);
-    if (modo === "bolitas"){
-      $("mensaje").textContent = "¿Cuál número es?";
-      decirYa("¿Cuál número es?");
-    }
   }
 
-  const animos = ["¡Muy bien!","¡Excelente!","¡Genial!","¡Súper!","¡Qué lista!","¡Eso es!"];
-
-  function responder(boton, valor, correcto){
+  function elegirNumero(boton, valor, correcto){
     if (bloqueado) return;
     bloqueado = true;
     const botones = $("opciones").children;
@@ -767,31 +881,218 @@
 
     if (valor === correcto){
       boton.classList.add("bien");
-      piezas++;
-      const pieza = document.querySelector('#lienzo .pz[data-i="' + piezas + '"]');
-      if (pieza) pieza.classList.add("on");
-      pintarProgreso();
-      sBien();
-      const frase = animos[Math.floor(Math.random() * animos.length)];
-      globo(frase, false);
-      $("mensaje").textContent = frase + " Pusiste una pieza.";
-      decirYa(frase);
-      setTimeout(() => { piezas >= T ? terminar(true) : nuevaRonda(); }, 1400);
+      acierto(textosRonda.bien);
     } else {
       boton.classList.add("mal");
       for (let i = 0; i < botones.length; i++){
         if (Number(botones[i].textContent.replace(/\D/g, "")) === correcto) botones[i].classList.add("bien");
       }
-      vidas--;
-      pintarVidas();
-      sMal();
-      globo("Son " + correcto, true);
-      $("mensaje").textContent = modo === "bolitas"
-        ? "Contaste " + correcto + " bolitas. Este es el " + correcto + "."
-        : "Casi… " + a + " + " + b + " son " + correcto + ".";
-      decirYa(modo === "bolitas" ? "Este es el " + NOMBRES[correcto] : a + " más " + b + " son " + correcto);
-      setTimeout(() => { vidas <= 0 ? terminar(false) : nuevaRonda(); }, 2100);
+      fallo(textosRonda.mal, textosRonda.voz, textosRonda.globo);
     }
+  }
+
+  /* ---------- ¿Qué sigue? (patrones) ---------- */
+  const PATRONES = [["A","B"], ["A","A","B","B"], ["A","B","C"], ["A","B","B"]];
+
+  function rondaPatrones(){
+    bloqueado = true;
+    const tipo = PATRONES[Math.floor(Math.random() * PATRONES.length)];
+    const baraja2 = FIGURAS.slice();
+    for (let i = baraja2.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = baraja2[i]; baraja2[i] = baraja2[j]; baraja2[j] = t;
+    }
+    const letras = {A: baraja2[0], B: baraja2[1], C: baraja2[2]};
+    const largo = Math.min(7, tipo.length * 2 + 1);
+    const serie = [];
+    for (let i = 0; i < largo; i++) serie.push(tipo[i % tipo.length]);
+    const falta = letras[serie[largo - 1]];
+
+    const caja = $("serie");
+    caja.innerHTML = "";
+    for (let i = 0; i < largo - 1; i++){
+      const d = document.createElement("div");
+      d.className = "ficha";
+      d.style.animationDelay = (i * 0.07) + "s";
+      d.innerHTML = '<svg viewBox="0 0 100 100">' + letras[serie[i]].s + '</svg>';
+      caja.appendChild(d);
+    }
+    const hueco = document.createElement("div");
+    hueco.className = "ficha hueco"; hueco.id = "hueco"; hueco.textContent = "?";
+    caja.appendChild(hueco);
+
+    const alternativas = [falta];
+    for (let i = 0; i < baraja2.length && alternativas.length < 3; i++){
+      if (baraja2[i].n !== falta.n) alternativas.push(baraja2[i]);
+    }
+    for (let i = alternativas.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = alternativas[i]; alternativas[i] = alternativas[j]; alternativas[j] = t;
+    }
+    const ops = $("opciones");
+    ops.innerHTML = "";
+    alternativas.forEach((f) => {
+      const bt = document.createElement("button");
+      bt.type = "button"; bt.className = "op figura";
+      bt.innerHTML = '<svg viewBox="0 0 100 100">' + f.s + '</svg>';
+      bt.addEventListener("click", () => elegirFigura(bt, f, falta));
+      ops.appendChild(bt);
+    });
+    bloqueado = false;
+    paso(3);
+    $("mensaje").textContent = "¿Qué figura sigue?";
+    decirYa("¿Qué figura sigue?");
+  }
+
+  function elegirFigura(boton, figura, correcta){
+    if (bloqueado) return;
+    bloqueado = true;
+    const botones = $("opciones").children;
+    for (let i = 0; i < botones.length; i++) botones[i].disabled = true;
+    const hueco = $("hueco");
+    hueco.innerHTML = '<svg viewBox="0 0 100 100">' + correcta.s + '</svg>';
+    hueco.classList.add("puesta");
+    if (figura.n === correcta.n){
+      boton.classList.add("bien");
+      acierto("Completaste la serie.");
+    } else {
+      boton.classList.add("mal");
+      for (let i = 0; i < botones.length; i++){
+        if (botones[i] !== boton && botones[i].innerHTML.indexOf(correcta.s.slice(0, 40)) !== -1) botones[i].classList.add("bien");
+      }
+      fallo("Seguía " + correcta.n + ". Mira cómo se repite la serie.", "Seguía " + correcta.n, "Era " + correcta.n);
+    }
+  }
+
+  /* ---------- marco de diez reutilizable ---------- */
+  function pintarMarco(donde, llenas, claseExtra){
+    const marco = $(donde);
+    marco.innerHTML = "";
+    for (let i = 0; i < 10; i++){
+      const celda = document.createElement("div");
+      celda.className = "celda";
+      if (i < llenas){
+        const b = document.createElement("div");
+        b.className = "grande" + (claseExtra || "");
+        b.style.animationDelay = (i * 0.05) + "s";
+        b.setAttribute("data-pos", i);
+        celda.appendChild(b);
+      }
+      marco.appendChild(celda);
+    }
+  }
+
+  /* ---------- Amigos del diez ---------- */
+  function rondaAmigos(){
+    bloqueado = true;
+    const tiene = 1 + Math.floor(Math.random() * 9);
+    const faltan = 10 - tiene;
+    pintarMarco("marcoAmigos", tiene);
+    $("pistaAmigos").textContent = "Hay " + tiene + ". ¿Cuántas faltan para 10?";
+    textosRonda = {
+      bien: "¡" + tiene + " y " + faltan + " son 10!",
+      mal: "A " + tiene + " le faltan " + faltan + " para llegar a 10.",
+      voz: tiene + " y " + faltan + " son diez",
+      globo: "Faltan " + faltan
+    };
+    ponerOpciones(faltan, 1, 10, true);
+    $("mensaje").textContent = "¿Cuántas bolitas faltan para llenar el marco?";
+    decirYa("Hay " + NOMBRES[tiene] + ". ¿Cuántas faltan para diez?");
+  }
+
+  /* ---------- Mayor o menor ---------- */
+  function rondaComparar(){
+    bloqueado = true;
+    let x = 1 + Math.floor(Math.random() * 10);
+    let y = 1 + Math.floor(Math.random() * 10);
+    while (y === x) y = 1 + Math.floor(Math.random() * 10);
+    const buscarMas = Math.random() < 0.7;
+    const gana = buscarMas ? Math.max(x, y) : Math.min(x, y);
+
+    const caja = $("duelo");
+    caja.innerHTML = "";
+    [x, y].forEach((n, idx) => {
+      const lado = document.createElement("button");
+      lado.type = "button"; lado.className = "lado";
+      let dentro = "";
+      for (let i = 0; i < n; i++){
+        dentro += '<span class="bolita" style="animation-delay:' + (i * 0.05) + 's"></span>';
+      }
+      lado.innerHTML = dentro;
+      lado.addEventListener("click", () => elegirLado(lado, n, gana, x, y, buscarMas));
+      caja.appendChild(lado);
+    });
+    bloqueado = false;
+    paso(0);
+    $("mensaje").textContent = buscarMas ? "¿Cuál montón tiene MÁS?" : "¿Cuál montón tiene MENOS?";
+    decirYa(buscarMas ? "¿Cuál tiene más?" : "¿Cuál tiene menos?");
+  }
+
+  function elegirLado(lado, n, gana, x, y, buscarMas){
+    if (bloqueado) return;
+    bloqueado = true;
+    const lados = $("duelo").children;
+    for (let i = 0; i < lados.length; i++) lados[i].disabled = true;
+    const alto = Math.max(x, y), bajo = Math.min(x, y);
+    if (n === gana){
+      lado.classList.add("gana");
+      acierto(alto + " es más que " + bajo + ".");
+    } else {
+      lado.classList.add("pierde");
+      for (let i = 0; i < lados.length; i++){
+        if (lados[i] !== lado) lados[i].classList.add("gana");
+      }
+      fallo(buscarMas ? alto + " es más que " + bajo + "." : bajo + " es menos que " + alto + ".",
+            buscarMas ? NOMBRES[alto] + " es más que " + NOMBRES[bajo] : NOMBRES[bajo] + " es menos que " + NOMBRES[alto],
+            "Era " + gana);
+    }
+  }
+
+  /* ---------- Quitar bolitas (restar) ---------- */
+  let quedanRestar = 0, quitarRestar = 0;
+
+  function rondaRestar(){
+    bloqueado = true;
+    const total = 3 + Math.floor(Math.random() * 8);
+    quitarRestar = 1 + Math.floor(Math.random() * (total - 1));
+    quedanRestar = total - quitarRestar;
+    pintarMarco("marcoRestar", total);
+    $("contRestar").textContent = "Hay " + total + " bolitas";
+    $("btnQuitar").hidden = false;
+    $("btnQuitar").textContent = "¡Que vuelen " + quitarRestar + "!";
+    $("opciones").innerHTML = "";
+    paso(0);
+    $("mensaje").textContent = "Vamos a quitar " + quitarRestar + (quitarRestar === 1 ? " bolita" : " bolitas");
+    decirYa("Hay " + NOMBRES[total] + " bolitas. Vamos a quitar " + NOMBRES[quitarRestar]);
+  }
+
+  function volarBolitas(){
+    if ($("btnQuitar").hidden) return;
+    $("btnQuitar").hidden = true;
+    const todas = document.querySelectorAll("#marcoRestar .grande");
+    const total = todas.length;
+    let idx = 0;
+    const siguiente = () => {
+      if (idx >= quitarRestar){
+        $("contRestar").textContent = "¿Cuántas quedan?";
+        textosRonda = {
+          bien: total + " menos " + quitarRestar + " son " + quedanRestar + ".",
+          mal: "Quedaban " + quedanRestar + " bolitas.",
+          voz: total + " menos " + quitarRestar + " son " + NOMBRES[quedanRestar],
+          globo: "Quedan " + quedanRestar
+        };
+        ponerOpciones(quedanRestar, 0, 10, true);
+        $("mensaje").textContent = "Cuenta las que quedaron";
+        decirYa("¿Cuántas quedan?");
+        return;
+      }
+      const b = todas[total - 1 - idx];
+      b.classList.add("vuela");
+      tono([700 - idx * 45], 0.12);
+      idx++;
+      setTimeout(siguiente, 520);
+    };
+    siguiente();
   }
 
   function empezar(clave){
@@ -836,6 +1137,7 @@
   });
 
   $("btnJuntar").addEventListener("click", juntar);
+  $("btnQuitar").addEventListener("click", volarBolitas);
   $("btnOtraVez").addEventListener("click", () => empezar(mundo));
   $("btnOtroMundo").addEventListener("click", () => mostrar("inicio"));
   $("btnSalir").addEventListener("click", () => { clearTimeout(relojPista); mostrar("inicio"); });

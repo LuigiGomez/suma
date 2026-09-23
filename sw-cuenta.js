@@ -1,4 +1,4 @@
-const CACHE = 'cuenta-construye-v2';
+const CACHE = 'cuenta-construye-v3';
 const ARCHIVOS = ['./cuenta.html', './cuenta.webmanifest', './icon-cuenta-192.png', './icon-cuenta-512.png'];
 
 self.addEventListener('install', e => {

@@ -1,0 +1,888 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="description" content="Juego de sumas con bolitas para ninas de 6 anos: junta, cuenta tocando y construye.">
+<meta name="theme-color" content="#6B4EE6">
+<link rel="manifest" href="cuenta.webmanifest">
+<link rel="apple-touch-icon" href="icon-cuenta-192.png">
+<style>
+  html,body{height:100%}
+  body{margin:0;font-family:'Trebuchet MS',Arial,sans-serif;background:#F2F7FF;color:#26364F;-webkit-text-size-adjust:100%}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+  :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+</style>
+<title>Cuenta y Construye</title>
+<style>
+  :root{
+    color-scheme: light;
+    --papel:#F2F7FF;
+    --nube:#FFFFFF;
+    --tinta:#26364F;
+    --tinta-suave:#6B7C97;
+    --rosa:#FF5C93;
+    --turquesa:#12B5A5;
+    --sol:#FFC53D;
+    --morado:#6B4EE6;
+    --verde:#4FBF52;
+    --arena:#FFF7EA;
+    --arena-borde:#E5D3B3;
+    --sombra:0 6px 0 rgba(38,54,79,.16);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--papel);color:var(--tinta);
+    font-family:'Nunito','Trebuchet MS',system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+  h1,h2,.cifra,.titulo,.contador,.btn,.op,.mundo,.mas{font-family:'Baloo 2','Comic Sans MS','Trebuchet MS',cursive,sans-serif;font-weight:800}
+  #app{min-height:100%;display:flex;flex-direction:column;align-items:center;padding:0 16px;padding-block:14px 22px;gap:14px}
+  .marco-col{width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px}
+
+  .btn{font-size:22px;color:#fff;background:var(--morado);border:none;border-radius:20px;
+    padding:14px 26px;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,.18);transition:transform .1s,box-shadow .1s}
+  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+  .btn:focus-visible{outline:4px solid var(--sol);outline-offset:3px}
+  .btn.verde{background:var(--verde)}
+  .btn.rosa{background:var(--rosa)}
+
+  .titulo{text-align:center;font-size:40px;font-size:clamp(32px,9.5vw,46px);line-height:1;margin:6px 0 0;
+    color:var(--morado);text-shadow:3px 3px 0 var(--sol)}
+  .sub{text-align:center;margin:0;font-size:17px;font-weight:700;color:var(--tinta-suave)}
+  .elige{text-align:center;font-size:21px;margin:2px 0 0}
+  .mundos{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between}
+  .mundo{width:calc(50% - 6px);background:var(--nube);border:4px solid var(--tinta);border-radius:24px;
+    padding:10px 8px 12px;cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;
+    box-shadow:var(--sombra);font-size:17px;color:var(--tinta);transition:transform .12s}
+  .mundo:hover{transform:translateY(-3px) rotate(-1deg)}
+  .mundo:focus-visible{outline:4px solid var(--rosa);outline-offset:3px}
+  .mundo svg{width:100%;height:auto;display:block;border-radius:14px;background:#CDEBFF}
+  .nota{background:#E4F6F3;border-radius:18px;padding:12px 16px;font-size:15px;line-height:1.45;
+    color:#0C6A61;font-weight:700;text-align:center}
+
+  /* selector de modo */
+  .modos{display:flex;gap:8px;flex-wrap:wrap}
+  .modo{flex:1 1 0;min-width:102px;background:var(--nube);border:4px solid #DCE5F2;border-radius:22px;
+    padding:12px 6px;cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;
+    font-family:'Baloo 2',cursive,sans-serif;font-size:16px;font-weight:800;color:var(--tinta-suave)}
+  .modo.activo{border-color:var(--morado);color:var(--morado);background:#F2EEFF;box-shadow:var(--sombra)}
+  .modo:focus-visible{outline:4px solid var(--sol);outline-offset:3px}
+  .modo small{font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:var(--tinta-suave);line-height:1.25}
+  .modo .icono{display:flex;gap:4px;align-items:center;justify-content:center;height:22px}
+  .modo .icono i{width:14px;height:14px;border-radius:50%;background:var(--rosa);display:block}
+  .modo .icono i:nth-child(2){background:var(--turquesa)}
+  .modo .icono i:nth-child(3){background:var(--sol)}
+  .modo .icono b{font-family:'Baloo 2',cursive,sans-serif;font-size:19px;color:var(--morado)}
+
+  /* modo memoria */
+  .tablero{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .carta{display:block;width:calc(25% - 6px);height:76px;height:auto;aspect-ratio:1;min-height:72px;
+    perspective:700px;border:none;background:none;padding:0;cursor:pointer}
+  .carta:focus-visible{outline:4px solid var(--sol);outline-offset:3px;border-radius:18px}
+  .interior{display:block;position:relative;width:100%;height:100%;transform-style:preserve-3d;
+    transition:transform .45s cubic-bezier(.2,.9,.3,1.15)}
+  .carta.volteada .interior,.carta.hecha .interior{transform:rotateY(180deg)}
+  .cara{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:18px;
+    display:flex;align-items:center;justify-content:center;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden}
+  .dorso{background:linear-gradient(145deg,#8468FF,#5B3FD6);box-shadow:inset 0 -6px 0 rgba(0,0,0,.2)}
+  .dorso b{width:34%;height:34%;border-radius:50%;background:rgba(255,255,255,.28);display:block}
+  .frente{transform:rotateY(180deg);background:#FFFDF7;border:4px solid var(--tinta);
+    box-shadow:inset 0 -5px 0 rgba(38,54,79,.08)}
+  .frente svg{width:64%;height:64%;display:block}
+  .carta.hecha{pointer-events:none}
+  .carta.hecha .frente{border-color:var(--verde);background:#EAF9EA;animation:pop .5s}
+  .carta.fallo .frente{border-color:var(--rosa);animation:tiembla .4s}
+
+  /* modo números */
+  .suma{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+  .grupo{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:72px}
+  .puntos{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:90px;margin:0 auto}
+  .punto{width:14px;height:14px;border-radius:50%;background:var(--rosa);border:2px solid rgba(0,0,0,.12)}
+  .grupo.b .punto{background:var(--turquesa)}
+  .cifra{font-size:44px;line-height:1}
+  .signo{font-family:'Baloo 2',cursive,sans-serif;font-size:34px;font-weight:800;color:var(--tinta-suave)}
+
+  .barra{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .vidas{display:flex;gap:4px}
+  .vidas svg{width:30px;height:30px;transition:transform .3s,opacity .3s}
+  .vidas svg.ida{opacity:.22;transform:scale(.7)}
+  .piezas-txt{font-family:'Baloo 2',cursive,sans-serif;font-size:18px;font-weight:800;color:var(--morado)}
+  .progreso{display:flex;gap:4px;width:100%}
+  .bloque{flex:1;height:12px;border-radius:6px;background:#DCE5F2}
+  .bloque.on{background:var(--sol);box-shadow:0 0 0 2px #fff inset}
+
+  .escena{position:relative;width:100%;border:4px solid var(--tinta);border-radius:26px;overflow:hidden;
+    background:linear-gradient(#E8F6FF,#CDEBFF);box-shadow:var(--sombra)}
+  .escena svg{display:block;width:100%;height:auto}
+  /* las piezas que faltan se ven como una sombrita: ella sabe qué está construyendo */
+  .pz{opacity:.13;transform-box:fill-box;transform-origin:center;transition:opacity .25s}
+  .pz.on{opacity:1;transform:scale(1);animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+  @keyframes pop{0%{transform:scale(.3) rotate(-8deg)}60%{transform:scale(1.12) rotate(3deg)}100%{transform:scale(1)}}
+  .globo{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) scale(.6);background:var(--sol);
+    color:var(--tinta);border:4px solid var(--tinta);font-family:'Baloo 2',cursive,sans-serif;font-size:26px;font-weight:800;
+    padding:8px 20px;border-radius:999px;opacity:0;pointer-events:none}
+  .globo.ver{animation:globo 1.1s ease forwards}
+  .globo.mal{background:#FFD9E5}
+  @keyframes globo{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}25%{opacity:1;transform:translate(-50%,-70%) scale(1.1)}70%{opacity:1;transform:translate(-50%,-80%) scale(1)}100%{opacity:0;transform:translate(-50%,-110%) scale(.95)}}
+
+  .tarjeta{background:var(--nube);border:4px solid var(--tinta);border-radius:26px;padding:14px;
+    box-shadow:var(--sombra);display:flex;flex-direction:column;gap:12px}
+
+  /* bandejas */
+  .bandejas{display:flex;align-items:center;justify-content:center;gap:8px}
+  .bandeja{background:var(--arena);border:4px dashed var(--arena-borde);border-radius:22px;padding:10px;
+    min-width:108px;min-height:98px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-content:center}
+  .bolita{width:28px;height:28px;border-radius:50%;background:var(--rosa);box-shadow:inset 0 -4px 0 rgba(0,0,0,.16);
+    animation:entra .3s ease both}
+  .bandeja.b .bolita{background:var(--turquesa)}
+  @keyframes entra{from{transform:scale(0)}to{transform:scale(1)}}
+  .mas{font-size:36px;color:var(--tinta-suave)}
+
+  /* marco de diez */
+  .marco10{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:272px;margin:0 auto;
+    background:var(--arena);border:4px solid var(--arena-borde);border-radius:22px;padding:10px}
+  .celda{width:42px;height:42px;border-radius:14px;background:#F0E3CD;display:flex;align-items:center;justify-content:center}
+  .grande{width:38px;height:38px;border-radius:50%;background:var(--rosa);border:none;padding:0;cursor:pointer;
+    font-family:'Baloo 2',cursive,sans-serif;font-size:19px;font-weight:800;color:#fff;
+    box-shadow:inset 0 -5px 0 rgba(0,0,0,.18);animation:cae .4s cubic-bezier(.2,1.5,.4,1) both}
+  .grande.b{background:var(--turquesa)}
+  .grande.contada{box-shadow:inset 0 0 0 4px rgba(255,255,255,.8);cursor:default}
+  .grande.pista{animation:latido .9s ease-in-out infinite}
+  .grande:focus-visible{outline:3px solid var(--morado);outline-offset:3px}
+  @keyframes cae{from{transform:translateY(-38px) scale(.5);opacity:0}to{transform:none;opacity:1}}
+  @keyframes latido{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+  .contador{font-size:26px;text-align:center;color:var(--morado);min-height:34px}
+
+  .opciones{display:flex;gap:10px}
+  .op{flex:1 1 0;width:32%;font-size:34px;color:var(--tinta);background:var(--sol);border:4px solid var(--tinta);
+    border-radius:22px;padding:12px 0 10px;min-height:86px;cursor:pointer;
+    box-shadow:0 6px 0 rgba(38,54,79,.26);transition:transform .1s,box-shadow .1s}
+  .op:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(38,54,79,.26)}
+  .op:focus-visible{outline:4px solid var(--morado);outline-offset:3px}
+  .op.bien{background:var(--verde);color:#fff;animation:pop .45s}
+  .op.mal{background:var(--rosa);color:#fff;animation:tiembla .4s}
+  @keyframes tiembla{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+  .mini-fila{display:flex;gap:3px;justify-content:center;margin-top:7px;flex-wrap:wrap;max-width:76px;margin-left:auto;margin-right:auto}
+  .mini-fila i{width:9px;height:9px;border-radius:50%;background:rgba(38,54,79,.55);display:block}
+  .op.bien .mini-fila i,.op.mal .mini-fila i{background:rgba(255,255,255,.85)}
+
+  .mensaje{font-weight:900;font-size:17px;color:var(--morado);min-height:24px;text-align:center}
+  .pie{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:-4px}
+  .mini{font-weight:900;font-size:14px;color:var(--tinta-suave);background:#E7EDF7;border:none;
+    border-radius:999px;padding:9px 14px;cursor:pointer}
+  .mini:focus-visible{outline:3px solid var(--morado);outline-offset:2px}
+
+  .final{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+  .estrellas{font-size:40px;letter-spacing:6px;color:var(--sol)}
+  .final h2{font-size:34px;margin:0;color:var(--morado)}
+  .final p{margin:0;font-size:17px;font-weight:700;color:var(--tinta-suave)}
+  #confeti{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50}
+
+  @supports not (row-gap: 1px){
+    .marco-col>*+*{margin-top:14px}
+    .mundos .mundo{margin-bottom:12px}
+    .opciones .op+.op{margin-left:10px}
+    .celda{margin:4px}
+    .mini-fila i{margin:1px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001s !important;transition-duration:.001s !important}
+  }
+  @media (max-width:380px){
+    .op{font-size:29px;min-height:78px}
+    .celda{width:38px;height:38px}
+    .grande{width:34px;height:34px;font-size:17px}
+    .marco10{max-width:248px}
+  }
+</style>
+
+
+</head>
+<body>
+<canvas id="confeti" hidden></canvas>
+
+<div id="app">
+  <section class="marco-col" id="pantallaInicio">
+    <h1 class="titulo">Cuenta y Construye</h1>
+    <p class="sub">Cada acierto pone una pieza de tu construcción.</p>
+    <p class="elige">¿Cómo quieres jugar?</p>
+    <div class="modos" id="modos">
+      <button class="modo activo" type="button" data-modo="bolitas">
+        <span class="icono"><i></i><i></i><i></i></span>
+        Contar bolitas
+        <small>Las juntas y las tocas una por una</small>
+      </button>
+      <button class="modo" type="button" data-modo="numeros">
+        <span class="icono"><b>3 + 4</b></span>
+        Con números
+        <small>Eliges el resultado</small>
+      </button>
+      <button class="modo" type="button" data-modo="memoria">
+        <span class="icono"><b>★ ★</b></span>
+        Memoria
+        <small>Parejas, sin corazones</small>
+      </button>
+    </div>
+    <p class="elige">¿Y qué quieres construir?</p>
+    <div class="mundos" id="mundos"></div>
+    <p class="nota">10 piezas para terminar · sumas hasta el 10 con 5 corazones · memoria con intentos libres</p>
+  </section>
+
+  <section class="marco-col" id="pantallaJuego" hidden>
+    <div class="barra">
+      <div class="vidas" id="vidas" aria-label="Corazones"></div>
+      <div class="piezas-txt" id="piezasTxt">Piezas 0 / 10</div>
+    </div>
+    <div class="progreso" id="progreso"></div>
+
+    <div class="escena">
+      <div id="lienzo"></div>
+      <div class="globo" id="globo"></div>
+    </div>
+
+    <div class="tarjeta">
+      <!-- Modo números -->
+      <div id="sumaNum" hidden>
+        <div class="suma">
+          <div class="grupo a">
+            <div class="puntos" id="puntosA"></div>
+            <div class="cifra" id="numA">3</div>
+          </div>
+          <div class="signo">+</div>
+          <div class="grupo b">
+            <div class="puntos" id="puntosB"></div>
+            <div class="cifra" id="numB">4</div>
+          </div>
+          <div class="signo">=</div>
+          <div class="cifra" id="incognita" style="color:var(--morado)">?</div>
+        </div>
+      </div>
+
+      <!-- Paso 1: los dos grupos -->
+      <div id="paso1">
+        <div class="bandejas">
+          <div class="bandeja a" id="bandejaA"></div>
+          <div class="mas">+</div>
+          <div class="bandeja b" id="bandejaB"></div>
+        </div>
+        <div style="text-align:center;margin-top:12px">
+          <button class="btn verde" id="btnJuntar" type="button">¡Juntarlas!</button>
+        </div>
+      </div>
+
+      <!-- Paso 2: contar tocando -->
+      <div id="paso2" hidden>
+        <div class="marco10" id="marco10"></div>
+        <div class="contador" id="contador">Toca cada bolita</div>
+      </div>
+
+      <!-- Paso 3: elegir el número -->
+      <div id="paso3" hidden>
+        <div class="opciones" id="opciones"></div>
+      </div>
+
+      <!-- Modo memoria -->
+      <div id="memoria" hidden>
+        <div class="tablero" id="tablero"></div>
+      </div>
+
+      <div class="mensaje" id="mensaje">Mira los dos grupos de bolitas</div>
+      <div class="pie">
+        <button class="mini" id="btnVoz" type="button">🔊 Voz</button>
+        <button class="mini" id="btnSalir" type="button">Cambiar</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="marco-col final" id="pantallaFinal" hidden>
+    <div class="estrellas" id="estrellas">★★★</div>
+    <h2 id="finalTitulo">¡Lo lograste!</h2>
+    <p id="finalTexto">Construiste tu castillo.</p>
+    <div class="escena"><div id="lienzoFinal"></div></div>
+    <button class="btn verde" id="btnOtraVez" type="button">Jugar otra vez</button>
+    <button class="btn rosa" id="btnOtroMundo" type="button">Construir otra cosa</button>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const P = (i, contenido) => '<g class="pz" data-i="' + i + '">' + contenido + '</g>';
+  const escenas = {
+    castillo: {
+      nombre: "Castillo mágico",
+      cosa: "tu castillo",
+      piezas: [
+        P(1,'<path d="M0 248 Q100 236 200 244 T400 246 L400 300 L0 300Z" fill="#6FC85A"/><path d="M0 262 Q120 252 260 262 T400 258" fill="none" stroke="#57AF45" stroke-width="5" stroke-linecap="round"/>'),
+        P(2,'<rect x="150" y="150" width="100" height="98" rx="4" fill="#FFE2B0" stroke="#C98F4F" stroke-width="4"/><path d="M150 184h100M150 214h100M178 150v34M212 184v30" stroke="#EBC791" stroke-width="3"/>'),
+        P(3,'<rect x="92" y="118" width="58" height="130" rx="5" fill="#FFEED2" stroke="#C98F4F" stroke-width="4"/>'),
+        P(4,'<rect x="250" y="118" width="58" height="130" rx="5" fill="#FFEED2" stroke="#C98F4F" stroke-width="4"/>'),
+        P(5,'<g fill="#FFE2B0" stroke="#C98F4F" stroke-width="4"><rect x="150" y="136" width="22" height="18"/><rect x="189" y="136" width="22" height="18"/><rect x="228" y="136" width="22" height="18"/></g>'),
+        P(6,'<path d="M178 248v-38a22 22 0 0 1 44 0v38z" fill="#B97042" stroke="#8A4F2B" stroke-width="4"/><circle cx="212" cy="224" r="4" fill="#FFC53D"/>'),
+        P(7,'<g fill="#7FD3F5" stroke="#C98F4F" stroke-width="4"><path d="M108 178v-14a13 13 0 0 1 26 0v14z"/><path d="M266 178v-14a13 13 0 0 1 26 0v14z"/></g>'),
+        P(8,'<polygon points="121,74 96,120 146,120" fill="#FF4F87" stroke="#D32E65" stroke-width="4"/><polygon points="279,74 254,120 304,120" fill="#FF4F87" stroke="#D32E65" stroke-width="4"/>'),
+        P(9,'<path d="M200 136V98" stroke="#8A4F2B" stroke-width="5" stroke-linecap="round"/><path d="M200 100h36l-9 12 9 12h-36z" fill="#12B5A5" stroke="#0A8C80" stroke-width="3"/>'),
+        P(10,'<circle cx="52" cy="54" r="26" fill="#FFC53D"/><g stroke="#FFC53D" stroke-width="5" stroke-linecap="round"><path d="M52 14v-10M52 104v10M12 54H2M102 54h10M24 26l-7-7M80 82l7 7M80 26l7-7M24 82l-7 7"/></g><g fill="#fff"><ellipse cx="320" cy="60" rx="34" ry="18"/><ellipse cx="300" cy="52" rx="20" ry="14"/></g>')
+      ]
+    },
+    casa: {
+      nombre: "Casa del árbol",
+      cosa: "tu casa del árbol",
+      piezas: [
+        P(1,'<path d="M0 250 Q110 238 220 248 T400 248 L400 300 L0 300Z" fill="#6FC85A"/><path d="M30 268l10-14 10 14M340 272l10-14 10 14" stroke="#57AF45" stroke-width="4" fill="none" stroke-linecap="round"/>'),
+        P(2,'<path d="M182 250c-4-60 0-110 6-150h24c6 40 10 90 6 150z" fill="#A9703F" stroke="#7E4F27" stroke-width="4"/>'),
+        P(3,'<g fill="#63C24E" stroke="#3F9A34" stroke-width="4"><circle cx="140" cy="86" r="48"/><circle cx="260" cy="86" r="48"/><circle cx="200" cy="58" r="52"/></g>'),
+        P(4,'<rect x="118" y="176" width="164" height="16" rx="6" fill="#C98F4F" stroke="#8A5A2B" stroke-width="4"/>'),
+        P(5,'<rect x="140" y="118" width="120" height="58" fill="#FFE2B0" stroke="#8A5A2B" stroke-width="4"/><path d="M140 140h120M140 158h120" stroke="#EBC791" stroke-width="3"/>'),
+        P(6,'<polygon points="200,80 128,124 272,124" fill="#FF4F87" stroke="#D32E65" stroke-width="4"/>'),
+        P(7,'<circle cx="238" cy="145" r="15" fill="#7FD3F5" stroke="#8A5A2B" stroke-width="4"/><path d="M223 145h30M238 130v30" stroke="#8A5A2B" stroke-width="3"/>'),
+        P(8,'<rect x="158" y="132" width="34" height="44" rx="4" fill="#B97042" stroke="#7E4F27" stroke-width="4"/><circle cx="185" cy="156" r="3.5" fill="#FFC53D"/>'),
+        P(9,'<g stroke="#D9B27A" stroke-width="4" fill="none"><path d="M150 192v56M182 192v56"/><path d="M150 206h32M150 222h32M150 238h32"/></g>'),
+        P(10,'<g stroke="#7A4DD6" stroke-width="3" fill="none"><path d="M118 184q41 22 82 0"/></g><g><polygon points="132,190 144,190 138,202" fill="#FFC53D"/><polygon points="156,196 168,196 162,208" fill="#12B5A5"/><polygon points="180,198 192,198 186,210" fill="#FF4F87"/></g><g><ellipse cx="308" cy="150" rx="15" ry="11" fill="#FF8AB0"/><circle cx="320" cy="144" r="8" fill="#FF8AB0"/><circle cx="323" cy="142" r="2" fill="#3E2B52"/><polygon points="328,144 338,147 328,150" fill="#FFC53D"/></g>')
+      ]
+    },
+    jardin: {
+      nombre: "Jardín del unicornio",
+      cosa: "tu jardín con unicornio",
+      piezas: [
+        P(1,'<path d="M0 244 Q100 232 200 242 T400 240 L400 300 L0 300Z" fill="#7BD267"/><path d="M40 262l8-12 8 12M300 268l8-12 8 12" stroke="#4FAE3F" stroke-width="4" fill="none" stroke-linecap="round"/>'),
+        P(2,'<g><path d="M70 250v-36" stroke="#4FAE3F" stroke-width="5"/><g fill="#FF4F87"><circle cx="70" cy="200" r="10"/><circle cx="56" cy="212" r="10"/><circle cx="84" cy="212" r="10"/><circle cx="62" cy="226" r="10"/><circle cx="78" cy="226" r="10"/></g><circle cx="70" cy="213" r="7" fill="#FFC53D"/></g>'),
+        P(3,'<g><path d="M330 250v-30" stroke="#4FAE3F" stroke-width="5"/><g fill="#FFC53D"><circle cx="330" cy="206" r="10"/><circle cx="316" cy="218" r="10"/><circle cx="344" cy="218" r="10"/><circle cx="322" cy="232" r="10"/><circle cx="338" cy="232" r="10"/></g><circle cx="330" cy="219" r="7" fill="#fff"/></g>'),
+        P(4,'<g fill="#5CB94B"><ellipse cx="128" cy="246" rx="30" ry="18"/><ellipse cx="108" cy="250" rx="20" ry="13"/></g><circle cx="120" cy="240" r="5" fill="#FF8AB0"/><circle cx="138" cy="246" r="5" fill="#fff"/>'),
+        P(5,'<g fill="none" stroke-width="12" stroke-linecap="round"><path d="M40 190a130 130 0 0 1 260 0" stroke="#FF4F87" opacity=".9"/><path d="M58 190a112 112 0 0 1 224 0" stroke="#FFC53D"/><path d="M76 190a94 94 0 0 1 188 0" stroke="#5FBF4A"/><path d="M94 190a76 76 0 0 1 152 0" stroke="#7A4DD6"/></g>'),
+        P(6,'<g fill="#fff"><ellipse cx="52" cy="196" rx="30" ry="17"/><ellipse cx="288" cy="196" rx="30" ry="17"/><ellipse cx="302" cy="188" rx="18" ry="12"/></g>'),
+        P(7,'<g><g transform="translate(150,86)"><path d="M0 0 C-16-18 -30-6 -4 8 Z" fill="#FF8AB0"/><path d="M4 0 C20-18 34-6 8 8 Z" fill="#FF8AB0"/><path d="M2 -6v18" stroke="#7A4DD6" stroke-width="3"/></g><g transform="translate(262,120)"><path d="M0 0 C-12-14 -23-5 -3 6 Z" fill="#12B5A5"/><path d="M3 0 C15-14 26-5 6 6 Z" fill="#12B5A5"/><path d="M1 -5v14" stroke="#7A4DD6" stroke-width="3"/></g></g>'),
+        P(8,'<g fill="#FFFFFF" stroke="#E2D6F2" stroke-width="3"><ellipse cx="208" cy="212" rx="52" ry="32"/><rect x="170" y="232" width="13" height="30" rx="6"/><rect x="196" y="238" width="13" height="26" rx="6"/><rect x="224" y="238" width="13" height="26" rx="6"/><rect x="248" y="232" width="13" height="30" rx="6"/></g>'),
+        P(9,'<g><path d="M244 200c10-14 16-32 22-44l20 8c-4 16-8 34-16 44z" fill="#fff" stroke="#E2D6F2" stroke-width="3"/><ellipse cx="290" cy="152" rx="26" ry="19" fill="#fff" stroke="#E2D6F2" stroke-width="3"/><circle cx="300" cy="148" r="3.5" fill="#3E2B52"/><polygon points="292,133 300,106 306,136" fill="#FFC53D" stroke="#E0A81F" stroke-width="2"/><ellipse cx="312" cy="160" rx="5" ry="4" fill="#FFD9E5"/></g>'),
+        P(10,'<g><path d="M272 140c-14-10-30-4-34 10 12-6 20-4 26 2 8 8 4 18-4 24 18 2 28-24 12-36z" fill="#FF8AB0"/><path d="M286 128c-8-12 2-24 16-22-8 6-8 12-4 18z" fill="#7A4DD6"/><path d="M158 196c-18 6-24 26-14 44 4-14 12-22 22-24z" fill="#FF8AB0"/></g><g fill="#FFC53D"><polygon points="60,60 65,74 79,74 68,83 72,97 60,88 48,97 52,83 41,74 55,74"/><polygon points="344,86 348,96 358,96 350,102 353,112 344,106 335,112 338,102 330,96 340,96"/></g>')
+      ]
+    },
+    cohete: {
+      nombre: "Cohete espacial",
+      cosa: "tu cohete",
+      piezas: [
+        P(1,'<rect x="0" y="0" width="400" height="300" fill="#2B2150"/><path d="M0 256 Q90 232 190 252 T400 244 L400 300 L0 300Z" fill="#8E7BC4"/><g fill="#7A69AF"><ellipse cx="96" cy="272" rx="24" ry="9"/><ellipse cx="300" cy="278" rx="30" ry="10"/></g>'),
+        P(2,'<path d="M172 108h56v118h-56z" fill="#F4F1FA" stroke="#B9AFD4" stroke-width="4"/>'),
+        P(3,'<path d="M200 36c18 22 28 48 28 72h-56c0-24 10-50 28-72z" fill="#FF4F87" stroke="#D32E65" stroke-width="4"/>'),
+        P(4,'<path d="M172 168l-34 62h34z" fill="#FF4F87" stroke="#D32E65" stroke-width="4"/><path d="M228 168l34 62h-34z" fill="#FF4F87" stroke="#D32E65" stroke-width="4"/>'),
+        P(5,'<circle cx="200" cy="140" r="22" fill="#7FD3F5" stroke="#3E2B52" stroke-width="5"/><path d="M190 132a12 12 0 0 1 10-6" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>'),
+        P(6,'<g fill="#12B5A5"><rect x="172" y="182" width="56" height="12"/><rect x="172" y="204" width="56" height="8"/></g><rect x="166" y="226" width="68" height="14" rx="5" fill="#C9C1E0" stroke="#B9AFD4" stroke-width="3"/>'),
+        P(7,'<g><path d="M186 240c4 20 10 32 14 40 4-8 10-20 14-40z" fill="#FFC53D"/><path d="M192 240c3 14 6 22 8 28 2-6 5-14 8-28z" fill="#FF4F87"/></g>'),
+        P(8,'<g fill="#FFF3C4"><circle cx="46" cy="54" r="4"/><circle cx="92" cy="106" r="3"/><circle cx="330" cy="46" r="4"/><circle cx="366" cy="120" r="3"/><circle cx="286" cy="86" r="3"/><circle cx="60" cy="168" r="3"/></g><g fill="#FFC53D"><polygon points="118,44 123,58 137,58 126,67 130,81 118,72 106,81 110,67 99,58 113,58"/></g>'),
+        P(9,'<circle cx="326" cy="170" r="40" fill="#FFD98A" stroke="#E0A81F" stroke-width="4"/><g fill="#EFC169"><circle cx="314" cy="160" r="8"/><circle cx="338" cy="180" r="6"/><circle cx="330" cy="152" r="4"/></g><ellipse cx="326" cy="170" rx="56" ry="12" fill="none" stroke="#C9C1E0" stroke-width="5" transform="rotate(-18 326 170)"/>'),
+        P(10,'<g transform="translate(70,180)"><circle cx="0" cy="0" r="22" fill="#F4F1FA" stroke="#B9AFD4" stroke-width="4"/><path d="M-12-4a12 12 0 0 1 20-8" stroke="#7FD3F5" stroke-width="7" fill="none" stroke-linecap="round"/><rect x="-16" y="20" width="32" height="30" rx="12" fill="#F4F1FA" stroke="#B9AFD4" stroke-width="4"/><path d="M16 26l22-14" stroke="#F4F1FA" stroke-width="10" stroke-linecap="round"/><circle cx="42" cy="10" r="8" fill="#FF4F87"/><path d="M-16 44l-16 16M16 44l14 18" stroke="#F4F1FA" stroke-width="10" stroke-linecap="round"/></g>')
+      ]
+    },
+    pastel: {
+      nombre: "Pastel de cumpleaños",
+      cosa: "tu pastel de cumpleaños",
+      piezas: [
+        P(1,'<rect width="400" height="300" fill="#FFF0F6"/><path d="M0 250h400v50H0z" fill="#E6B98A"/><path d="M0 250 q40 16 80 0 t80 0 t80 0 t80 0 t80 0v-10H0z" fill="#F3D3B3"/>'),
+        P(2,'<ellipse cx="200" cy="248" rx="120" ry="18" fill="#FFFFFF" stroke="#E2D6F2" stroke-width="4"/>'),
+        P(3,'<rect x="106" y="182" width="188" height="62" rx="10" fill="#FFD9E5" stroke="#F3A9C4" stroke-width="4"/>'),
+        P(4,'<rect x="132" y="128" width="136" height="56" rx="10" fill="#FFF0B8" stroke="#E8C95E" stroke-width="4"/>'),
+        P(5,'<path d="M106 188q16 18 32 0t32 0t32 0t32 0t32 0t28 0v-10H106z" fill="#FFFFFF"/><path d="M132 134q16 18 32 0t32 0t32 0t32 0v-10H132z" fill="#FFFFFF"/>'),
+        P(6,'<g fill="#FF5C93"><circle cx="140" cy="214" r="7"/><circle cx="180" cy="222" r="7"/><circle cx="220" cy="212" r="7"/><circle cx="260" cy="222" r="7"/></g><g fill="#12B5A5"><circle cx="160" cy="158" r="6"/><circle cx="200" cy="164" r="6"/><circle cx="240" cy="158" r="6"/></g>'),
+        P(7,'<g><rect x="164" y="92" width="10" height="36" rx="4" fill="#7FD3F5"/><rect x="195" y="86" width="10" height="42" rx="4" fill="#FF5C93"/><rect x="226" y="92" width="10" height="36" rx="4" fill="#B79BFF"/></g>'),
+        P(8,'<g><path d="M169 92c8-8 6-16 0-22-6 6-8 14 0 22z" fill="#FFC53D"/><path d="M200 86c8-8 6-16 0-22-6 6-8 14 0 22z" fill="#FFC53D"/><path d="M231 92c8-8 6-16 0-22-6 6-8 14 0 22z" fill="#FFC53D"/></g>'),
+        P(9,'<g fill="#FF3B6B"><circle cx="152" cy="126" r="8"/><circle cx="200" cy="120" r="8"/><circle cx="248" cy="126" r="8"/></g><path d="M152 118v-8M200 112v-8M248 118v-8" stroke="#4FBF52" stroke-width="3" stroke-linecap="round"/>'),
+        P(10,'<g><path d="M62 70a24 30 0 1 1 48 0 24 30 0 0 1-48 0z" fill="#FF5C93"/><path d="M86 100v46" stroke="#B0779A" stroke-width="3"/><path d="M290 60a22 28 0 1 1 44 0 22 28 0 0 1-44 0z" fill="#7FD3F5"/><path d="M312 88v44" stroke="#7FA3B8" stroke-width="3"/></g><g fill="#FFC53D"><circle cx="46" cy="150" r="5"/><circle cx="356" cy="160" r="5"/><circle cx="70" cy="200" r="4"/><circle cx="340" cy="212" r="4"/></g>')
+      ]
+    },
+    pecera: {
+      nombre: "Pecera con peces",
+      cosa: "tu pecera",
+      piezas: [
+        P(1,'<rect width="400" height="300" fill="#EAF6FF"/><path d="M0 256h400v44H0z" fill="#D9BFA0"/>'),
+        P(2,'<rect x="60" y="48" width="280" height="208" rx="26" fill="#BFE9FF" stroke="#7FB8D4" stroke-width="6"/>'),
+        P(3,'<path d="M66 96h268v152a8 8 0 0 1-8 8H74a8 8 0 0 1-8-8z" fill="#8FD8F7" opacity=".75"/><path d="M66 96h268v10H66z" fill="#FFFFFF" opacity=".6"/>'),
+        P(4,'<path d="M66 236q60-22 134-8t134 8v14a8 8 0 0 1-8 8H74a8 8 0 0 1-8-8z" fill="#F6E2B8"/><g fill="#EAD2A0"><circle cx="120" cy="240" r="6"/><circle cx="250" cy="236" r="5"/></g>'),
+        P(5,'<g fill="none" stroke="#3FA85A" stroke-width="10" stroke-linecap="round"><path d="M100 236q-14-40 6-70"/><path d="M118 238q10-34 0-58"/><path d="M300 236q16-36-2-62"/></g>'),
+        P(6,'<g><path d="M186 236v-34h34v34z" fill="#E8D9F5" stroke="#C3AEDC" stroke-width="3"/><path d="M180 202h46l-8-14h-30z" fill="#C9A8E8"/><rect x="198" y="216" width="12" height="20" rx="5" fill="#8E6BB8"/></g>'),
+        P(7,'<g transform="translate(140,150)"><ellipse cx="0" cy="0" rx="26" ry="18" fill="#FF8A3D"/><path d="M24 0l20-14v28z" fill="#FF6F1F"/><circle cx="-10" cy="-4" r="4" fill="#26364F"/><path d="M-4-14q8-10 16-2" stroke="#FF6F1F" stroke-width="5" fill="none" stroke-linecap="round"/></g>'),
+        P(8,'<g transform="translate(252,186)"><ellipse cx="0" cy="0" rx="20" ry="14" fill="#FF5C93"/><path d="M-18 0l-16-11v22z" fill="#E33C77"/><circle cx="8" cy="-3" r="3.4" fill="#26364F"/></g>'),
+        P(9,'<g fill="#FFFFFF" opacity=".85"><circle cx="168" cy="122" r="6"/><circle cx="180" cy="100" r="4"/><circle cx="174" cy="82" r="3"/><circle cx="276" cy="160" r="5"/><circle cx="286" cy="140" r="3.5"/></g>'),
+        P(10,'<g transform="translate(300,244)"><path d="M0-14l4 9 10 1-7 7 2 10-9-5-9 5 2-10-7-7 10-1z" fill="#FF7BA8"/></g><g transform="translate(112,246)"><ellipse cx="0" cy="0" rx="16" ry="11" fill="#FF6B4A"/><path d="M-16-2l-10-8M16-2l10-8" stroke="#FF6B4A" stroke-width="5" stroke-linecap="round"/><circle cx="-6" cy="-3" r="2.6" fill="#26364F"/><circle cx="6" cy="-3" r="2.6" fill="#26364F"/></g>')
+      ]
+    },
+    helado: {
+      nombre: "Helado gigante",
+      cosa: "tu helado gigante",
+      piezas: [
+        P(1,'<rect width="400" height="300" fill="#FFF6F0"/><g fill="#FFE2EC"><circle cx="54" cy="70" r="26"/><circle cx="348" cy="96" r="20"/><circle cx="60" cy="220" r="16"/></g>'),
+        P(2,'<path d="M172 196h56l-28 92z" fill="#E8B06A" stroke="#C98F4F" stroke-width="4"/><g stroke="#C98F4F" stroke-width="3" fill="none"><path d="M178 214h44M184 236h32M190 258h20"/></g>'),
+        P(3,'<circle cx="200" cy="184" r="40" fill="#FF8FB6" stroke="#E86A96" stroke-width="4"/>'),
+        P(4,'<circle cx="200" cy="130" r="38" fill="#9BE7D4" stroke="#5FC4AE" stroke-width="4"/>'),
+        P(5,'<circle cx="200" cy="82" r="34" fill="#FFE083" stroke="#E8C154" stroke-width="4"/>'),
+        P(6,'<path d="M168 76q10 22 0 40t20 26 22-14 24 10 12-30-8-34q-16 16-32 0t-38 2z" fill="#8B5A2B" opacity=".92"/>'),
+        P(7,'<g stroke-width="5" stroke-linecap="round"><path d="M176 112l6-10" stroke="#FF5C93"/><path d="M216 122l8-8" stroke="#6B4EE6"/><path d="M186 160l4-11" stroke="#FFC53D"/><path d="M220 172l9-7" stroke="#12B5A5"/><path d="M198 200l2-12" stroke="#FF5C93"/></g>'),
+        P(8,'<path d="M236 92l30-40 10 8-28 42z" fill="#F6D9A8" stroke="#D9B27A" stroke-width="4"/>'),
+        P(9,'<circle cx="200" cy="46" r="13" fill="#FF3B6B"/><path d="M200 34c2-12 10-16 18-16" stroke="#4FBF52" stroke-width="4" fill="none" stroke-linecap="round"/>'),
+        P(10,'<g fill="#FF7BA8"><path d="M92 150c-8-10-22-4-22 8s22 24 22 24 22-12 22-24-14-18-22-8z"/><path d="M318 176c-6-8-17-3-17 6s17 18 17 18 17-9 17-18-11-14-17-6z" opacity=".85"/></g><g fill="#FFC53D"><polygon points="70,60 74,72 86,72 76,80 80,92 70,84 60,92 64,80 54,72 66,72"/><polygon points="330,44 333,53 342,53 335,59 337,68 330,63 323,68 325,59 318,53 327,53"/></g>')
+      ]
+    },
+    granja: {
+      nombre: "Granja con animales",
+      cosa: "tu granja",
+      piezas: [
+        P(1,'<rect width="400" height="300" fill="#DFF3FF"/><path d="M0 214q100-16 200 0t200-6v92H0z" fill="#79CE62"/><path d="M0 250q120 12 220-4t180 6" fill="none" stroke="#5CB94B" stroke-width="5"/>'),
+        P(2,'<rect x="150" y="140" width="150" height="86" fill="#E8574B" stroke="#B83F36" stroke-width="4"/>'),
+        P(3,'<path d="M140 142l85-48 85 48z" fill="#C74338" stroke="#9A322A" stroke-width="4"/><rect x="216" y="106" width="18" height="18" fill="#F6E2B8" stroke="#B83F36" stroke-width="3"/>'),
+        P(4,'<path d="M196 226v-56h58v56z" fill="#F6E2B8" stroke="#B83F36" stroke-width="4"/><path d="M196 170l58 56M254 170l-58 56" stroke="#B83F36" stroke-width="4"/>'),
+        P(5,'<rect x="162" y="152" width="26" height="24" fill="#7FD3F5" stroke="#B83F36" stroke-width="4"/><path d="M162 164h26M175 152v24" stroke="#B83F36" stroke-width="3"/><path d="M262 152h30v24h-30z" fill="#FFD98A" stroke="#B83F36" stroke-width="4"/>'),
+        P(6,'<g stroke="#D9B27A" stroke-width="7" stroke-linecap="round"><path d="M24 226v-40M64 226v-40M104 226v-40"/><path d="M14 198h100M14 214h100"/></g>'),
+        P(7,'<g transform="translate(320,214)"><ellipse cx="0" cy="0" rx="22" ry="17" fill="#FFFFFF" stroke="#E2D6F2" stroke-width="3"/><circle cx="16" cy="-14" r="11" fill="#FFFFFF" stroke="#E2D6F2" stroke-width="3"/><path d="M16-26c0-6 8-6 6 0z" fill="#E8574B"/><polygon points="26,-14 36,-11 26,-8" fill="#FFC53D"/><circle cx="19" cy="-16" r="2.4" fill="#26364F"/><path d="M-8 16v8M6 16v8" stroke="#FFC53D" stroke-width="4" stroke-linecap="round"/></g>'),
+        P(8,'<g transform="translate(78,206)"><ellipse cx="0" cy="0" rx="34" ry="24" fill="#FFFFFF" stroke="#D8CFC2" stroke-width="3"/><g fill="#7E6A58"><ellipse cx="-12" cy="-6" rx="9" ry="7"/><ellipse cx="12" cy="6" rx="7" ry="5"/></g><circle cx="32" cy="-14" r="15" fill="#FFFFFF" stroke="#D8CFC2" stroke-width="3"/><circle cx="36" cy="-16" r="2.6" fill="#26364F"/><ellipse cx="38" cy="-8" rx="8" ry="6" fill="#FFB3C7"/><path d="M-20 22v10M0 24v8M18 22v10" stroke="#7E6A58" stroke-width="5" stroke-linecap="round"/></g>'),
+        P(9,'<circle cx="52" cy="58" r="26" fill="#FFC53D"/><g stroke="#FFC53D" stroke-width="5" stroke-linecap="round"><path d="M52 18V8M52 98v10M12 58H2M102 58h10M24 30l-7-7M80 86l7 7M80 30l7-7M24 86l-7 7"/></g><g fill="#FFFFFF"><ellipse cx="316" cy="56" rx="32" ry="17"/><ellipse cx="298" cy="48" rx="19" ry="13"/></g>'),
+        P(10,'<g transform="translate(356,170)"><path d="M0 56V22" stroke="#8A5A2B" stroke-width="10" stroke-linecap="round"/><circle cx="0" cy="0" r="32" fill="#4FAE3F"/><circle cx="-18" cy="10" r="20" fill="#5CB94B"/><circle cx="16" cy="12" r="18" fill="#5CB94B"/><g fill="#E8574B"><circle cx="-10" cy="-6" r="5"/><circle cx="12" cy="2" r="5"/><circle cx="0" cy="14" r="5"/></g></g>')
+      ]
+    }
+
+  };
+
+  const svgDe = (clave, completo) => {
+    const e = escenas[clave];
+    let s = '<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + e.nombre + '">';
+    s += e.piezas.join("") + '</svg>';
+    if (completo) s = s.replace(/class="pz"/g, 'class="pz on"');
+    return s;
+  };
+
+  const T = 10, VIDAS = 5;
+  const NOMBRES = ["cero","una","dos","tres","cuatro","cinco","seis","siete","ocho","nueve","diez"];
+  let mundo = "castillo", modo = "bolitas", piezas = 0, vidas = VIDAS;
+  let a = 1, b = 1, contadas = 0, bloqueado = false, ultima = "", sonido = true, relojPista = null;
+
+  const $ = (id) => document.getElementById(id);
+  const pantallas = {inicio: $("pantallaInicio"), juego: $("pantallaJuego"), final: $("pantallaFinal")};
+  const mostrar = (cual) => { for (const k in pantallas) pantallas[k].hidden = (k !== cual); window.scrollTo(0,0); };
+
+  /* ---------- sonido ---------- */
+  let ctx = null;
+  function tono(frecs, dur){
+    if (!sonido) return;
+    try{
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === "suspended") ctx.resume();
+      frecs.forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = "sine"; o.frequency.value = f;
+        const t0 = ctx.currentTime + i * dur;
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.25, t0 + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        o.connect(g); g.connect(ctx.destination); o.start(t0); o.stop(t0 + dur + 0.05);
+      });
+    }catch(e){}
+  }
+  const sCuenta = (n) => tono([330 + n * 45], 0.13);
+  const sBien = () => tono([523,659,784], 0.14);
+  const sMal = () => tono([330,247], 0.2);
+  const sGana = () => tono([523,659,784,1047,1319], 0.16);
+
+  function decir(texto){
+    if (!sonido || !("speechSynthesis" in window)) return;
+    try{
+      const u = new SpeechSynthesisUtterance(texto);
+      u.lang = "es-ES"; u.rate = 0.85; u.pitch = 1.25;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  const decirYa = (texto) => { try{ speechSynthesis.cancel(); }catch(e){} decir(texto); };
+
+  /* ---------- inicio ---------- */
+  const cajaMundos = $("mundos");
+  ["castillo","casa","jardin","cohete","pastel","pecera","helado","granja"].forEach((clave) => {
+    const bt = document.createElement("button");
+    bt.type = "button"; bt.className = "mundo";
+    bt.innerHTML = svgDe(clave, true) + '<span>' + escenas[clave].nombre + '</span>';
+    bt.addEventListener("click", () => empezar(clave));
+    cajaMundos.appendChild(bt);
+  });
+
+  /* ---------- marcadores ---------- */
+  function pintarVidas(){
+    // En memoria no hay vidas: se juega tranquila hasta encontrar todas las parejas.
+    $("vidas").hidden = (modo === "memoria");
+    let h = "";
+    for (let i = 0; i < VIDAS; i++){
+      h += '<svg viewBox="0 0 24 24" class="' + (i >= vidas ? "ida" : "") + '">' +
+           '<path d="M12 21s-8-5.2-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.8-8 11-8 11z" fill="#FF5C93" stroke="#D32E65" stroke-width="1.6"/></svg>';
+    }
+    $("vidas").innerHTML = h;
+  }
+  function pintarProgreso(){
+    const c = $("progreso"); c.innerHTML = "";
+    for (let i = 0; i < T; i++){
+      const d = document.createElement("div");
+      d.className = "bloque" + (i < piezas ? " on" : "");
+      c.appendChild(d);
+    }
+    $("piezasTxt").textContent = "Piezas " + piezas + " / " + T;
+  }
+  function globo(texto, mal){
+    const g = $("globo");
+    g.textContent = texto;
+    g.className = "globo ver" + (mal ? " mal" : "");
+    setTimeout(() => { g.className = "globo"; }, 1200);
+  }
+
+  /* ---------- ronda ---------- */
+  /* ---------- memoria ---------- */
+  const FIGURAS = [
+    {n:"estrella", s:'<polygon points="50,6 62,38 96,38 68,58 79,92 50,72 21,92 32,58 4,38 38,38" fill="#FFC53D" stroke="#E0A81F" stroke-width="4" stroke-linejoin="round"/>'},
+    {n:"corazón", s:'<path d="M50 88C22 68 8 52 8 36a22 22 0 0 1 42-10 22 22 0 0 1 42 10c0 16-14 32-42 52z" fill="#FF5C93" stroke="#D32E65" stroke-width="4"/>'},
+    {n:"flor", s:'<g fill="#B79BFF" stroke="#8E6BE0" stroke-width="3"><circle cx="50" cy="22" r="17"/><circle cx="78" cy="42" r="17"/><circle cx="67" cy="74" r="17"/><circle cx="33" cy="74" r="17"/><circle cx="22" cy="42" r="17"/></g><circle cx="50" cy="50" r="13" fill="#FFC53D"/>'},
+    {n:"mariposa", s:'<g fill="#12B5A5" stroke="#0A8C80" stroke-width="3"><path d="M48 50C22 18 4 30 12 54c6 18 26 20 36-4z"/><path d="M52 50c26-32 44-20 36 4-6 18-26 20-36-4z"/></g><path d="M50 26v52" stroke="#26364F" stroke-width="6" stroke-linecap="round"/><path d="M50 26l-8-12M50 26l8-12" stroke="#26364F" stroke-width="4" stroke-linecap="round"/>'},
+    {n:"pez", s:'<ellipse cx="44" cy="52" rx="34" ry="24" fill="#FF8A3D" stroke="#E06A20" stroke-width="4"/><path d="M76 52l22-18v36z" fill="#FF6F1F" stroke="#E06A20" stroke-width="4" stroke-linejoin="round"/><circle cx="28" cy="46" r="5" fill="#26364F"/>'},
+    {n:"cohete", s:'<path d="M50 6c14 16 20 34 20 50H30c0-16 6-34 20-50z" fill="#F4F1FA" stroke="#26364F" stroke-width="4"/><circle cx="50" cy="40" r="10" fill="#7FD3F5" stroke="#26364F" stroke-width="4"/><path d="M30 56L14 82h16zM70 56l16 26H70z" fill="#FF5C93" stroke="#D32E65" stroke-width="4" stroke-linejoin="round"/><path d="M42 68h16c-2 14-6 22-8 26-2-4-6-12-8-26z" fill="#FFC53D"/>'},
+    {n:"helado", s:'<path d="M34 46h32l-16 48z" fill="#E8B06A" stroke="#C98F4F" stroke-width="4" stroke-linejoin="round"/><circle cx="50" cy="34" r="22" fill="#FF8FB6" stroke="#E86A96" stroke-width="4"/><circle cx="50" cy="12" r="7" fill="#FF3B6B"/>'},
+    {n:"pastel", s:'<rect x="16" y="46" width="68" height="40" rx="8" fill="#FFD9E5" stroke="#F3A9C4" stroke-width="4"/><path d="M16 52q12 14 24 0t24 0 20 0v-8H16z" fill="#FFF7EA"/><rect x="45" y="18" width="10" height="26" rx="4" fill="#7FD3F5" stroke="#4FA9CC" stroke-width="3"/><path d="M50 18c8-8 6-14 0-18-6 4-8 10 0 18z" fill="#FFC53D"/>'},
+    {n:"luna", s:'<path d="M64 8a42 42 0 1 0 22 74A44 44 0 0 1 64 8z" fill="#FFE083" stroke="#E8C154" stroke-width="4"/><g fill="#F0CC63"><circle cx="46" cy="44" r="7"/><circle cx="36" cy="66" r="5"/></g>'},
+    {n:"arcoíris", s:'<g fill="none" stroke-width="11" stroke-linecap="round"><path d="M10 78a40 40 0 0 1 80 0" stroke="#FF5C93"/><path d="M23 78a27 27 0 0 1 54 0" stroke="#FFC53D"/><path d="M36 78a14 14 0 0 1 28 0" stroke="#4FBF52"/></g>'}
+  ];
+  let baraja = [], abiertas = [], parejas = 0, fallos = 0, memBloqueo = false;
+
+  function iniciarMemoria(){
+    parejas = 0; fallos = 0; abiertas = []; memBloqueo = false;
+    baraja = [];
+    FIGURAS.forEach((f, i) => { baraja.push({id: i, f: f}); baraja.push({id: i, f: f}); });
+    for (let i = baraja.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = baraja[i]; baraja[i] = baraja[j]; baraja[j] = t;
+    }
+    const tab = $("tablero");
+    tab.innerHTML = "";
+    baraja.forEach((c, pos) => {
+      const bt = document.createElement("button");
+      bt.type = "button"; bt.className = "carta";
+      bt.setAttribute("aria-label", "carta " + (pos + 1));
+      bt.innerHTML =
+        '<span class="interior">' +
+          '<span class="cara dorso"><b></b></span>' +
+          '<span class="cara frente"><svg viewBox="0 0 100 100">' + c.f.s + '</svg></span>' +
+        '</span>';
+      bt.addEventListener("click", () => voltear(bt, c));
+      tab.appendChild(bt);
+    });
+    $("mensaje").textContent = "Busca las dos cartas iguales";
+    decirYa("Busca las dos cartas iguales");
+  }
+
+  function voltear(bt, carta){
+    if (memBloqueo || bt.classList.contains("volteada") || bt.classList.contains("hecha")) return;
+    bt.classList.add("volteada");
+    abiertas.push({bt: bt, carta: carta});
+    tono([440 + abiertas.length * 80], 0.1);
+    decirYa(carta.f.n);
+    if (abiertas.length < 2) return;
+
+    memBloqueo = true;
+    const uno = abiertas[0], dos = abiertas[1];
+    if (uno.carta.id === dos.carta.id){
+      setTimeout(() => {
+        uno.bt.classList.add("hecha"); dos.bt.classList.add("hecha");
+        parejas++; piezas++;
+        const pieza = document.querySelector('#lienzo .pz[data-i="' + piezas + '"]');
+        if (pieza) pieza.classList.add("on");
+        pintarProgreso();
+        sBien();
+        const frase = animos[Math.floor(Math.random() * animos.length)];
+        globo(frase, false);
+        $("mensaje").textContent = frase + " Encontraste una pareja: ¡una pieza más!";
+        decirYa(frase);
+        abiertas = []; memBloqueo = false;
+        if (parejas >= FIGURAS.length) setTimeout(() => terminar(true), 1200);
+      }, 450);
+    } else {
+      uno.bt.classList.add("fallo"); dos.bt.classList.add("fallo");
+      fallos++;
+      sMal();
+      $("mensaje").textContent = "Esas no son iguales. ¡Recuerda dónde estaban!";
+      setTimeout(() => {
+        uno.bt.classList.remove("volteada", "fallo");
+        dos.bt.classList.remove("volteada", "fallo");
+        abiertas = []; memBloqueo = false;
+      }, 1300);
+    }
+  }
+
+  function paso(n){
+    $("memoria").hidden = (modo !== "memoria");
+    $("sumaNum").hidden = (modo !== "numeros");
+    $("paso1").hidden = (modo !== "bolitas" || n !== 1);
+    $("paso2").hidden = (modo !== "bolitas" || n < 2);
+    $("paso3").hidden = (n !== 3);
+  }
+
+  function puntitos(caja, n, cual){
+    caja.innerHTML = "";
+    for (let i = 0; i < n; i++){
+      const d = document.createElement("div");
+      d.className = "punto";
+      caja.appendChild(d);
+    }
+  }
+
+  function nuevaRonda(){
+    let x, y, clave;
+    do {
+      x = 1 + Math.floor(Math.random() * 5);
+      y = 1 + Math.floor(Math.random() * Math.min(5, 10 - x));
+      clave = x + "+" + y;
+    } while (clave === ultima);
+    ultima = clave; a = x; b = y; contadas = 0; bloqueado = false;
+
+    if (modo === "numeros"){
+      $("numA").textContent = a;
+      $("numB").textContent = b;
+      $("incognita").textContent = "?";
+      puntitos($("puntosA"), a);
+      puntitos($("puntosB"), b);
+      preguntar();
+      $("mensaje").textContent = "¿Cuánto es " + a + " más " + b + "?";
+      decirYa(a + " más " + b);
+      return;
+    }
+
+    const llena = (caja, n) => {
+      caja.innerHTML = "";
+      for (let i = 0; i < n; i++){
+        const d = document.createElement("div");
+        d.className = "bolita";
+        d.style.animationDelay = (i * 0.07) + "s";
+        caja.appendChild(d);
+      }
+    };
+    llena($("bandejaA"), a);
+    llena($("bandejaB"), b);
+    $("marco10").innerHTML = "";
+    $("contador").textContent = "Toca cada bolita";
+    $("opciones").innerHTML = "";
+    paso(1);
+    $("mensaje").textContent = "Aquí hay " + NOMBRES[a] + " y aquí " + NOMBRES[b];
+    decirYa(NOMBRES[a] + " bolitas, y " + NOMBRES[b] + " bolitas. ¡Júntalas!");
+  }
+
+  function juntar(){
+    paso(2);
+    const marco = $("marco10");
+    marco.innerHTML = "";
+    const total = a + b;
+    for (let i = 0; i < 10; i++){
+      const celda = document.createElement("div");
+      celda.className = "celda";
+      if (i < total){
+        const bt = document.createElement("button");
+        bt.type = "button";
+        bt.className = "grande" + (i >= a ? " b" : "");
+        bt.style.animationDelay = (i * 0.06) + "s";
+        bt.setAttribute("aria-label", "bolita " + (i + 1));
+        bt.addEventListener("click", () => contar(bt));
+        celda.appendChild(bt);
+      }
+      marco.appendChild(celda);
+    }
+    $("mensaje").textContent = "Ahora tócalas una por una";
+    decirYa("Ahora cuéntalas con el dedo");
+    programarPista();
+  }
+
+  function programarPista(){
+    clearTimeout(relojPista);
+    relojPista = setTimeout(() => {
+      const falta = document.querySelector("#marco10 .grande:not(.contada)");
+      if (falta) falta.classList.add("pista");
+    }, 6000);
+  }
+
+  function contar(bt){
+    if (bt.classList.contains("contada") || bloqueado) return;
+    contadas++;
+    bt.classList.add("contada");
+    bt.classList.remove("pista");
+    bt.textContent = contadas;
+    sCuenta(contadas);
+    decirYa(NOMBRES[contadas]);
+    $("contador").textContent = contadas + (contadas === a + b ? "" : " …");
+
+    const quedan = document.querySelectorAll("#marco10 .grande:not(.contada)").length;
+    if (quedan === 0){
+      bloqueado = true;
+      clearTimeout(relojPista);
+      const total = a + b;
+      $("contador").textContent = "¡Son " + total + "!";
+      setTimeout(() => decirYa("Son " + NOMBRES[total]), 500);
+      setTimeout(preguntar, 1400);
+    } else {
+      programarPista();
+    }
+  }
+
+  function preguntar(){
+    const correcto = a + b;
+    const ops = [correcto];
+    while (ops.length < 3){
+      const d = correcto + (Math.random() < 0.5 ? -1 : 1) * (1 + Math.floor(Math.random() * 2));
+      if (d >= 1 && d <= 10 && ops.indexOf(d) === -1) ops.push(d);
+    }
+    for (let i = ops.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = ops[i]; ops[i] = ops[j]; ops[j] = t;
+    }
+    const caja = $("opciones");
+    caja.innerHTML = "";
+    ops.forEach((v) => {
+      const bt = document.createElement("button");
+      bt.type = "button"; bt.className = "op";
+      if (modo === "bolitas"){
+        let mini = '<span class="mini-fila">';
+        for (let i = 0; i < v; i++) mini += '<i></i>';
+        mini += '</span>';
+        bt.innerHTML = v + mini;
+      } else {
+        bt.textContent = v;
+      }
+      bt.addEventListener("click", () => responder(bt, v, correcto));
+      caja.appendChild(bt);
+    });
+    bloqueado = false;
+    paso(3);
+    if (modo === "bolitas"){
+      $("mensaje").textContent = "¿Cuál número es?";
+      decirYa("¿Cuál número es?");
+    }
+  }
+
+  const animos = ["¡Muy bien!","¡Excelente!","¡Genial!","¡Súper!","¡Qué lista!","¡Eso es!"];
+
+  function responder(boton, valor, correcto){
+    if (bloqueado) return;
+    bloqueado = true;
+    const botones = $("opciones").children;
+    for (let i = 0; i < botones.length; i++) botones[i].disabled = true;
+    if (modo === "numeros") $("incognita").textContent = correcto;
+
+    if (valor === correcto){
+      boton.classList.add("bien");
+      piezas++;
+      const pieza = document.querySelector('#lienzo .pz[data-i="' + piezas + '"]');
+      if (pieza) pieza.classList.add("on");
+      pintarProgreso();
+      sBien();
+      const frase = animos[Math.floor(Math.random() * animos.length)];
+      globo(frase, false);
+      $("mensaje").textContent = frase + " Pusiste una pieza.";
+      decirYa(frase);
+      setTimeout(() => { piezas >= T ? terminar(true) : nuevaRonda(); }, 1400);
+    } else {
+      boton.classList.add("mal");
+      for (let i = 0; i < botones.length; i++){
+        if (Number(botones[i].textContent.replace(/\D/g, "")) === correcto) botones[i].classList.add("bien");
+      }
+      vidas--;
+      pintarVidas();
+      sMal();
+      globo("Son " + correcto, true);
+      $("mensaje").textContent = modo === "bolitas"
+        ? "Contaste " + correcto + " bolitas. Este es el " + correcto + "."
+        : "Casi… " + a + " + " + b + " son " + correcto + ".";
+      decirYa(modo === "bolitas" ? "Este es el " + NOMBRES[correcto] : a + " más " + b + " son " + correcto);
+      setTimeout(() => { vidas <= 0 ? terminar(false) : nuevaRonda(); }, 2100);
+    }
+  }
+
+  function empezar(clave){
+    mundo = clave; piezas = 0; vidas = VIDAS; ultima = "";
+    $("lienzo").innerHTML = svgDe(clave, false);
+    pintarVidas(); pintarProgreso();
+    mostrar("juego");
+    if (modo === "memoria"){ paso(0); iniciarMemoria(); }
+    else nuevaRonda();
+  }
+
+  function terminar(gano){
+    clearTimeout(relojPista);
+    mostrar("final");
+    $("lienzoFinal").innerHTML = $("lienzo").innerHTML;
+    const e = escenas[mundo];
+    if (gano){
+      const n = modo === "memoria"
+        ? (fallos <= 4 ? 3 : (fallos <= 9 ? 2 : 1))
+        : (vidas >= 5 ? 3 : (vidas >= 3 ? 2 : 1));
+      $("estrellas").textContent = ["☆☆☆","★☆☆","★★☆","★★★"][n];
+      $("finalTitulo").textContent = "¡Lo lograste!";
+      $("finalTexto").textContent = modo === "memoria"
+        ? "Encontraste las 10 parejas y terminaste " + e.cosa + "."
+        : "Terminaste " + e.cosa + " con " + vidas + (vidas === 1 ? " corazón" : " corazones") + " de sobra.";
+      sGana(); decirYa("¡Lo lograste!");
+      confetiVa();
+    } else {
+      $("estrellas").textContent = "☆☆☆";
+      $("finalTitulo").textContent = "¡Casi casi!";
+      $("finalTexto").textContent = "Pusiste " + piezas + " de " + T + " piezas. Vamos otra vez, que ya falta poquito.";
+      decirYa("Casi casi. Vamos otra vez");
+    }
+  }
+
+  [].forEach.call($("modos").children, (bt) => {
+    bt.addEventListener("click", () => {
+      modo = bt.getAttribute("data-modo");
+      [].forEach.call($("modos").children, (o) => o.classList.remove("activo"));
+      bt.classList.add("activo");
+    });
+  });
+
+  $("btnJuntar").addEventListener("click", juntar);
+  $("btnOtraVez").addEventListener("click", () => empezar(mundo));
+  $("btnOtroMundo").addEventListener("click", () => mostrar("inicio"));
+  $("btnSalir").addEventListener("click", () => { clearTimeout(relojPista); mostrar("inicio"); });
+  $("btnVoz").addEventListener("click", () => {
+    sonido = !sonido;
+    $("btnVoz").textContent = sonido ? "🔊 Voz" : "🔇 Sin voz";
+    if (!sonido && "speechSynthesis" in window){ try{ speechSynthesis.cancel(); }catch(e){} }
+  });
+
+  function confetiVa(){
+    const cv = $("confeti"); cv.hidden = false;
+    const g = cv.getContext("2d");
+    const R = () => { cv.width = innerWidth; cv.height = innerHeight; };
+    R(); addEventListener("resize", R);
+    const colores = ["#FF5C93","#FFC53D","#12B5A5","#6B4EE6","#4FBF52","#7FD3F5"];
+    const ps = [];
+    for (let i = 0; i < 120; i++){
+      ps.push({x: Math.random()*cv.width, y: -20 - Math.random()*cv.height,
+        w: 8 + Math.random()*8, h: 10 + Math.random()*10,
+        vy: 1.6 + Math.random()*2.6, vx: -1 + Math.random()*2,
+        r: Math.random()*Math.PI, vr: -0.1 + Math.random()*0.2,
+        c: colores[Math.floor(Math.random()*colores.length)]});
+    }
+    let t = 0;
+    (function loop(){
+      t++;
+      g.clearRect(0,0,cv.width,cv.height);
+      ps.forEach((p) => {
+        p.y += p.vy; p.x += p.vx; p.r += p.vr;
+        if (p.y > cv.height + 20){ p.y = -20; p.x = Math.random()*cv.width; }
+        g.save(); g.translate(p.x,p.y); g.rotate(p.r);
+        g.fillStyle = p.c; g.fillRect(-p.w/2,-p.h/2,p.w,p.h); g.restore();
+      });
+      if (t < 380) requestAnimationFrame(loop);
+      else { g.clearRect(0,0,cv.width,cv.height); cv.hidden = true; }
+    })();
+  }
+
+  pintarVidas(); pintarProgreso(); mostrar("inicio");
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){ navigator.serviceWorker.register('sw-cuenta.js').catch(function(){}); });
+}
+</script>
+
+</body>
+</html>
